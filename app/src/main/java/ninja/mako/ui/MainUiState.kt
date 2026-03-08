@@ -3,6 +3,8 @@ package ninja.mako.ui
 import java.text.DateFormat
 import java.util.Date
 import ninja.mako.discovery.HostDiscoveryPlan
+import ninja.mako.discovery.HostSweepSession
+import ninja.mako.discovery.HostSweepStatus
 import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.network.NetworkSnapshot
 
@@ -30,7 +32,8 @@ data class MainUiState(
       snapshot: NetworkSnapshot,
       record: NetworkRecordEntity?,
       knownNetworkCount: Int,
-      discoveryPlan: HostDiscoveryPlan?
+      discoveryPlan: HostDiscoveryPlan?,
+      sweepSession: HostSweepSession?
     ): MainUiState {
       if (!snapshot.connected) return MainUiState()
 
@@ -72,17 +75,38 @@ data class MainUiState(
           domains = snapshot.domains ?: "Unavailable",
           privateDns = snapshot.privateDnsServerName ?: "Off / not advertised",
           validation = validationBits,
-          discoverySummary = discoveryPlan?.let { plan ->
-            buildString {
-              append("Sweep plan: ${plan.candidateHosts.size} of ${plan.totalUsableHostCount} hosts in ${plan.subnetCidr}.")
-              if (plan.prioritizedHosts.isNotEmpty()) {
-                append(" Priority: ${plan.prioritizedHosts.take(6).joinToString(", ")}")
-                if (plan.prioritizedHosts.size > 6) append(", ...")
-                append(".")
-              }
-              append(if (plan.truncated) " Bounded for civility." else " Full usable host set fits current budget.")
+          discoverySummary = when {
+            sweepSession != null && sweepSession.status == HostSweepStatus.RUNNING -> {
+              "Sweep running: ${sweepSession.hostsPlanned} hosts planned in ${sweepSession.subnetCidr}. Ports: ${sweepSession.portsProbed.joinToString(", ")}."
             }
-          } ?: "Planned stack: bounded subnet sweep, PTR lookups, mDNS, SSDP, and safe local banner fingerprinting.",
+            sweepSession != null && sweepSession.status == HostSweepStatus.COMPLETED -> {
+              buildString {
+                append("Sweep complete: ${sweepSession.reachableHosts}/${sweepSession.hostsAttempted} hosts responded in ${sweepSession.subnetCidr}.")
+                append(" Open-service hits: ${sweepSession.openServiceHosts}.")
+                if (sweepSession.sampleReachableHosts.isNotEmpty()) {
+                  append(" Samples: ${sweepSession.sampleReachableHosts.joinToString(", ")}.")
+                }
+              }
+            }
+            sweepSession != null && sweepSession.status == HostSweepStatus.CANCELLED -> {
+              "Sweep cancelled after a network change or disconnect."
+            }
+            sweepSession != null && sweepSession.status == HostSweepStatus.FAILED -> {
+              "Sweep failed before completion."
+            }
+            discoveryPlan != null -> {
+              buildString {
+                append("Sweep plan: ${discoveryPlan.candidateHosts.size} of ${discoveryPlan.totalUsableHostCount} hosts in ${discoveryPlan.subnetCidr}.")
+                if (discoveryPlan.prioritizedHosts.isNotEmpty()) {
+                  append(" Priority: ${discoveryPlan.prioritizedHosts.take(6).joinToString(", ")}")
+                  if (discoveryPlan.prioritizedHosts.size > 6) append(", ...")
+                  append(".")
+                }
+                append(if (discoveryPlan.truncated) " Bounded for civility." else " Full usable host set fits current budget.")
+              }
+            }
+            else -> "Planned stack: bounded subnet sweep, PTR lookups, mDNS, SSDP, and safe local banner fingerprinting."
+          },
           networkMemorySummary = if (record == null) {
             "No persisted network record is attached yet. Known networks stored locally: $knownNetworkCount."
           } else {

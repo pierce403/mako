@@ -75,6 +75,8 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - Current `networkKey` intentionally excludes ephemeral local host address and still excludes SSID/BSSID until the Android permission posture is documented and validated
 - Network records now persist raw identity inputs alongside the derived key in Room so grouping logic can be revised later without losing the original evidence
 - `HostCandidatePlanner` now derives a bounded IPv4 host plan from the active subnet, prioritizing gateway, in-subnet DNS servers, and neighbors near the local address before filling the rest of the sweep budget
+- `TcpHostSweepRunner` now runs the first bounded active discovery pass using TCP connect probes on ports `53, 80, 443, 445, 631`, with concurrency capped at 12 hosts and a 250 ms per-connect timeout
+- The current sweep controller starts automatically for a new active Wi-Fi discovery plan and cancels when the network key or active subnet plan changes or Wi-Fi drops
 - Record the exact Android permission posture here once the discovery stack is chosen; SSID/BSSID and multicast discovery may vary by API level
 - Record probe defaults and rate limits here once active fingerprinting exists
 - If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+

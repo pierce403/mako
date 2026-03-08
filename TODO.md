@@ -65,12 +65,12 @@
 
 ## Discovery pipeline
 
-- [ ] Build a controller that starts and stops discovery based on the currently connected network
+- [x] Build a controller that starts and stops discovery based on the currently connected network
 - [x] Derive the active subnet and candidate host ranges to inspect
-- [ ] Implement a bounded host sweep with concurrency limits and cancellation support
-- [ ] Track each sweep as a first-class session with start time, end time, status, and summary stats
+- [x] Implement a bounded host sweep with concurrency limits and cancellation support
+- [x] Track each sweep as a first-class session with start time, end time, status, and summary stats
 - [ ] Capture probe-level outcomes for diagnostics instead of only aggregate counters
-- [ ] Stop or pause discovery immediately when Wi-Fi disconnects or the network key changes
+- [x] Stop or pause discovery immediately when Wi-Fi disconnects or the network key changes
 
 ## DNS and local naming tricks
 
