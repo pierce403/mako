@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3
+
+- added a local-only diagnostics screen with copyable report output
+- included network identity inputs, sweep summaries, per-host probe outcomes, permission posture, and current sweep settings in diagnostics
+- clearly labeled exported diagnostics as containing sensitive local-network values
+
 ## 0.1.2
 
 - documented the discovery protocols and Android local-network constraints from primary sources
