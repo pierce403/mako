@@ -11,7 +11,9 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import kotlin.coroutines.coroutineContext
 
@@ -20,29 +22,73 @@ class TcpHostSweepRunner(
   private val maxConcurrentHosts: Int = 12,
   private val connectTimeoutMs: Int = 250
 ) {
-  suspend fun run(networkKey: String, plan: HostDiscoveryPlan): HostSweepSession = coroutineScope {
+  suspend fun run(
+    networkKey: String,
+    plan: HostDiscoveryPlan,
+    onProgress: (HostSweepSession) -> Unit = {}
+  ): HostSweepSession = coroutineScope {
     val semaphore = Semaphore(maxConcurrentHosts)
+    val mutex = Mutex()
     val startedAt = System.currentTimeMillis()
+    val results = mutableListOf<HostProbeResult>()
 
-    val results = plan.candidateHosts.map { host ->
+    onProgress(HostSweepSession.running(networkKey, plan, ports))
+
+    plan.candidateHosts.map { host ->
       async(Dispatchers.IO) {
         semaphore.withPermit {
-          probeHost(host)
+          val result = probeHost(host)
+          val progress = mutex.withLock {
+            results += result
+            buildSession(
+              networkKey = networkKey,
+              subnetCidr = plan.subnetCidr,
+              status = HostSweepStatus.RUNNING,
+              startedAt = startedAt,
+              endedAt = null,
+              hostsPlanned = plan.candidateHosts.size,
+              results = results.toList()
+            )
+          }
+          onProgress(progress)
+          result
         }
       }
     }.awaitAll()
 
-    val reachable = results.filter { result ->
-      result.outcome == HostProbeOutcome.CONNECTED || result.outcome == HostProbeOutcome.REFUSED
-    }
-
-    HostSweepSession(
+    buildSession(
       networkKey = networkKey,
       subnetCidr = plan.subnetCidr,
       status = HostSweepStatus.COMPLETED,
       startedAt = startedAt,
       endedAt = System.currentTimeMillis(),
       hostsPlanned = plan.candidateHosts.size,
+      results = results.toList()
+    ).also(onProgress)
+  }
+
+  fun ports(): List<Int> = ports
+
+  private fun buildSession(
+    networkKey: String,
+    subnetCidr: String,
+    status: HostSweepStatus,
+    startedAt: Long,
+    endedAt: Long?,
+    hostsPlanned: Int,
+    results: List<HostProbeResult>
+  ): HostSweepSession {
+    val reachable = results.filter { result ->
+      result.outcome == HostProbeOutcome.CONNECTED || result.outcome == HostProbeOutcome.REFUSED
+    }
+
+    return HostSweepSession(
+      networkKey = networkKey,
+      subnetCidr = subnetCidr,
+      status = status,
+      startedAt = startedAt,
+      endedAt = endedAt,
+      hostsPlanned = hostsPlanned,
       hostsAttempted = results.size,
       reachableHosts = reachable.size,
       openServiceHosts = results.count { result -> result.outcome == HostProbeOutcome.CONNECTED },
@@ -53,8 +99,6 @@ class TcpHostSweepRunner(
       results = results
     )
   }
-
-  fun ports(): List<Int> = ports
 
   private suspend fun probeHost(host: String): HostProbeResult {
     var lastFailure = HostProbeOutcome.UNREACHABLE

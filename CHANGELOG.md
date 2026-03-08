@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4
+
+- changed the main screen to a drawer-backed device list layout modeled after `unagi`
+- made the bounded TCP sweep publish incremental results so detected hosts appear while the scan is still running
+- added sortable/filterable detected-device cards for responsive local hosts and basic service-role hints
+- included the current app version in Diagnostics so staged APKs are easier to verify on-device
+
 ## 0.1.3
 
 - added a local-only diagnostics screen with copyable report output

@@ -2,10 +2,11 @@ package ninja.mako.ui
 
 import java.text.DateFormat
 import java.util.Date
+import ninja.mako.BuildConfig
+import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.discovery.HostDiscoveryPlan
 import ninja.mako.discovery.HostSweepSession
 import ninja.mako.discovery.HostSweepStatus
-import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.network.NetworkSnapshot
 
 data class MainUiState(
@@ -13,6 +14,8 @@ data class MainUiState(
   val headline: String = "No active network",
   val subhead: String = "Connect to Wi-Fi to start local discovery and per-network memory.",
   val statusBadge: String = "Offline",
+  val sweepStatus: HostSweepStatus? = null,
+  val totalDetectedDevices: Int = 0,
   val transport: String = "Unavailable",
   val interfaceName: String = "Unavailable",
   val localAddress: String = "Unavailable",
@@ -38,6 +41,8 @@ data class MainUiState(
     ): MainUiState {
       if (!snapshot.connected) {
         return MainUiState(
+          sweepStatus = sweepSession?.status,
+          totalDetectedDevices = sweepSession?.reachableHosts ?: 0,
           diagnosticsReport = buildDiagnosticsReport(
             snapshot = snapshot,
             record = record,
@@ -77,6 +82,8 @@ data class MainUiState(
             snapshot.isValidated -> "New Wi-Fi"
             else -> "Wi-Fi connected"
           },
+          sweepStatus = sweepSession?.status,
+          totalDetectedDevices = sweepSession?.reachableHosts ?: 0,
           transport = snapshot.transportLabel,
           interfaceName = snapshot.interfaceName ?: "Unavailable",
           localAddress = snapshot.localAddress ?: "Unavailable",
@@ -88,7 +95,12 @@ data class MainUiState(
           validation = validationBits,
           discoverySummary = when {
             sweepSession != null && sweepSession.status == HostSweepStatus.RUNNING -> {
-              "Sweep running: ${sweepSession.hostsPlanned} hosts planned in ${sweepSession.subnetCidr}. Ports: ${sweepSession.portsProbed.joinToString(", ")}."
+              buildString {
+                append("Sweep running: ${sweepSession.hostsAttempted}/${sweepSession.hostsPlanned} hosts attempted in ${sweepSession.subnetCidr}.")
+                append(" Detected so far: ${sweepSession.reachableHosts}.")
+                append(" Open-service hits: ${sweepSession.openServiceHosts}.")
+                append(" Ports: ${sweepSession.portsProbed.joinToString(", ")}.")
+              }
             }
             sweepSession != null && sweepSession.status == HostSweepStatus.COMPLETED -> {
               buildString {
@@ -147,6 +159,8 @@ data class MainUiState(
           headline = "${snapshot.transportLabel} network active",
           subhead = "MAKO is built for local Wi-Fi situational awareness. Connect to Wi-Fi to start local subnet discovery and per-network memory.",
           statusBadge = "${snapshot.transportLabel} only",
+          sweepStatus = sweepSession?.status,
+          totalDetectedDevices = sweepSession?.reachableHosts ?: 0,
           transport = snapshot.transportLabel,
           interfaceName = snapshot.interfaceName ?: "Unavailable",
           localAddress = snapshot.localAddress ?: "Unavailable",
@@ -193,6 +207,7 @@ data class MainUiState(
 
       return buildString {
         appendLine("MAKO Diagnostics Report")
+        appendLine("App version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
         appendLine("Sensitive values included below: local IPs, gateway IP, DNS servers, and discovered host addresses.")
         appendLine()
         appendLine("Connectivity")

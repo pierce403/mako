@@ -129,7 +129,7 @@
 
 ## Main UI
 
-- [ ] Build the main screen around the current network summary plus the discovered-device list
+- [x] Build the main screen around the current network summary plus the discovered-device list
 - [x] Show whether the current network is new or previously known
 - [ ] Show discovery state, last sweep time, active fingerprinting state, and any notable failures
 - [ ] Add sorting and filtering for live status, hostname, IP, confidence, last seen, and likely device category

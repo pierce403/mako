@@ -1,104 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
   xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:id="@+id/drawerLayout"
   android:layout_width="match_parent"
   android:layout_height="match_parent"
-  android:background="@color/mako_background"
-  android:orientation="vertical">
+  android:background="@color/mako_background">
 
-  <com.google.android.material.appbar.MaterialToolbar
-    android:id="@+id/toolbar"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:background="@color/mako_surface"
-    android:elevation="0dp"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
-    app:subtitleTextColor="@color/mako_secondary"
-    app:titleTextColor="@color/mako_on_surface" />
-
-  <View
-    android:layout_width="match_parent"
-    android:layout_height="1dp"
-    android:background="@color/mako_stroke_soft" />
-
-  <androidx.core.widget.NestedScrollView
-    android:id="@+id/scrollContent"
+  <LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipToPadding="false"
-    android:fillViewport="true"
-    android:paddingBottom="24dp">
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.MaterialToolbar
+      android:id="@+id/toolbar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:background="@color/mako_surface"
+      android:elevation="0dp"
+      android:paddingStart="16dp"
+      android:paddingEnd="16dp"
+      android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+      app:navigationIconTint="@color/mako_secondary"
+      app:subtitleTextColor="@color/mako_secondary"
+      app:titleTextColor="@color/mako_on_surface" />
+
+    <View
+      android:layout_width="match_parent"
+      android:layout_height="1dp"
+      android:background="@color/mako_stroke_soft" />
 
     <LinearLayout
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
+      android:layout_height="match_parent"
       android:orientation="vertical"
-      android:padding="16dp">
-
-      <TextView
-        android:id="@+id/eyebrow"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="@drawable/badge_surface"
-        android:paddingStart="12dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="6dp"
-        android:text="@string/eyebrow_waiting"
-        android:textAllCaps="true"
-        android:textColor="@color/mako_secondary"
-        android:textStyle="bold" />
-
-      <TextView
-        android:id="@+id/headline"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
-        android:text="@string/headline_default"
-        android:textColor="@color/mako_on_surface"
-        android:textSize="34sp"
-        android:textStyle="bold" />
-
-      <TextView
-        android:id="@+id/subhead"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:lineSpacingExtra="4dp"
-        android:text="@string/subhead_default"
-        android:textColor="@color/mako_on_background"
-        android:textSize="16sp" />
-
-      <TextView
-        android:id="@+id/statusBadge"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/badge_surface"
-        android:paddingStart="12dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="6dp"
-        android:text="@string/status_offline"
-        android:textColor="@color/mako_secondary"
-        android:textStyle="bold" />
-
-      <TextView
-        android:id="@+id/wifiWarning"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/panel_surface_subtle"
-        android:padding="16dp"
-        android:text="@string/wifi_required_warning"
-        android:textColor="@color/mako_on_background" />
+      android:paddingStart="16dp"
+      android:paddingTop="16dp"
+      android:paddingEnd="16dp"
+      android:paddingBottom="0dp">
 
       <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         app:cardBackgroundColor="@color/mako_surface_variant"
         app:cardCornerRadius="24dp"
         app:strokeColor="@color/mako_stroke"
@@ -111,9 +53,15 @@
           android:padding="18dp">
 
           <TextView
+            android:id="@+id/eyebrow"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/network_facts_title"
+            android:background="@drawable/badge_surface"
+            android:paddingStart="12dp"
+            android:paddingTop="6dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="6dp"
+            android:text="@string/eyebrow_waiting"
             android:textAllCaps="true"
             android:textColor="@color/mako_secondary"
             android:textStyle="bold" />
@@ -126,216 +74,52 @@
             android:orientation="horizontal">
 
             <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_transport"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/transportValue"
+              android:id="@+id/headline"
               android:layout_width="0dp"
               android:layout_height="wrap_content"
               android:layout_weight="1"
+              android:text="@string/headline_default"
               android:textColor="@color/mako_on_surface"
+              android:textSize="28sp"
+              android:textStyle="bold" />
+
+            <TextView
+              android:id="@+id/statusBadge"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_marginStart="12dp"
+              android:background="@drawable/badge_surface"
+              android:paddingStart="12dp"
+              android:paddingTop="6dp"
+              android:paddingEnd="12dp"
+              android:paddingBottom="6dp"
+              android:text="@string/status_offline"
+              android:textColor="@color/mako_secondary"
               android:textStyle="bold" />
           </LinearLayout>
 
-          <LinearLayout
+          <TextView
+            android:id="@+id/subhead"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:lineSpacingExtra="4dp"
+            android:text="@string/subhead_default"
+            android:textColor="@color/mako_on_background"
+            android:textSize="15sp" />
 
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_interface"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/interfaceValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
+          <TextView
+            android:id="@+id/networkScopeSummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_local_address"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/localAddressValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_subnet"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/subnetValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_gateway"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/gatewayValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_dns"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/dnsValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_domains"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/domainsValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_private_dns"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/privateDnsValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-
-          <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <TextView
-              android:layout_width="112dp"
-              android:layout_height="wrap_content"
-              android:text="@string/fact_validation"
-              android:textColor="@color/mako_on_background" />
-
-            <TextView
-              android:id="@+id/validationValue"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:layout_weight="1"
-              android:textColor="@color/mako_on_surface"
-              android:textStyle="bold" />
-          </LinearLayout>
-        </LinearLayout>
-      </com.google.android.material.card.MaterialCardView>
-
-      <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardBackgroundColor="@color/mako_surface_variant"
-        app:cardCornerRadius="24dp"
-        app:strokeColor="@color/mako_stroke"
-        app:strokeWidth="1dp">
-
-        <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:orientation="vertical"
-          android:padding="18dp">
+            android:layout_marginTop="14dp"
+            android:textColor="@color/mako_secondary"
+            android:textStyle="bold" />
 
           <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="@string/discovery_runway_title"
             android:textAllCaps="true"
             android:textColor="@color/mako_secondary"
@@ -345,31 +129,15 @@
             android:id="@+id/discoverySummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:lineSpacingExtra="4dp"
             android:text="@string/discovery_summary_default"
             android:textColor="@color/mako_on_background" />
-        </LinearLayout>
-      </com.google.android.material.card.MaterialCardView>
-
-      <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardBackgroundColor="@color/mako_surface_variant"
-        app:cardCornerRadius="24dp"
-        app:strokeColor="@color/mako_stroke"
-        app:strokeWidth="1dp">
-
-        <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:orientation="vertical"
-          android:padding="18dp">
 
           <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
             android:text="@string/network_memory_title"
             android:textAllCaps="true"
             android:textColor="@color/mako_secondary"
@@ -379,19 +147,193 @@
             android:id="@+id/networkMemorySummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:lineSpacingExtra="4dp"
             android:text="@string/network_memory_summary_default"
             android:textColor="@color/mako_on_background" />
+
+          <com.google.android.material.button.MaterialButton
+            android:id="@+id/openDiagnosticsButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/open_diagnostics" />
+
+          <TextView
+            android:id="@+id/wifiWarning"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/panel_surface_subtle"
+            android:padding="16dp"
+            android:text="@string/wifi_required_warning"
+            android:textColor="@color/mako_on_background"
+            android:visibility="gone" />
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
 
-      <com.google.android.material.button.MaterialButton
-        android:id="@+id/openDiagnosticsButton"
-        android:layout_width="wrap_content"
+      <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="@string/open_diagnostics" />
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:text="@string/device_list_title"
+          android:textColor="@color/mako_on_surface"
+          android:textSize="18sp"
+          android:textStyle="bold" />
+
+        <TextView
+          android:id="@+id/listSummary"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="16dp"
+          android:text="@string/device_list_summary_default"
+          android:textColor="@color/mako_secondary"
+          android:textStyle="bold" />
+      </LinearLayout>
+
+      <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+          android:id="@+id/deviceList"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:clipToPadding="false"
+          android:paddingBottom="24dp" />
+
+        <TextView
+          android:id="@+id/emptyState"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center"
+          android:background="@drawable/panel_surface_subtle"
+          android:gravity="center"
+          android:padding="20dp"
+          android:text="@string/empty_state_no_devices"
+          android:textColor="@color/mako_on_background"
+          android:visibility="gone" />
+      </FrameLayout>
     </LinearLayout>
-  </androidx.core.widget.NestedScrollView>
-</LinearLayout>
+  </LinearLayout>
+
+  <ScrollView
+    android:id="@+id/filterDrawer"
+    android:layout_width="320dp"
+    android:layout_height="match_parent"
+    android:layout_gravity="start"
+    android:background="@color/mako_surface"
+    android:fillViewport="true">
+
+    <LinearLayout
+      android:id="@+id/filterDrawerContent"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:paddingStart="16dp"
+      android:paddingTop="20dp"
+      android:paddingEnd="16dp"
+      android:paddingBottom="24dp">
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/filters_panel_title"
+        android:textColor="@color/mako_secondary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+      <TextView
+        android:id="@+id/drawerStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/status_offline"
+        android:textColor="@color/mako_secondary"
+        android:textStyle="bold" />
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/filters_panel_subtitle"
+        android:textColor="@color/mako_on_background" />
+
+      <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="16dp"
+        android:background="@color/mako_stroke_soft" />
+
+      <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+          android:id="@+id/filterInput"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:hint="@string/filter_hint"
+          android:textColor="@color/mako_on_surface"
+          android:textColorHint="@color/mako_secondary" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="@string/sort_label"
+          android:textColor="@color/mako_on_background" />
+
+        <Spinner
+          android:id="@+id/sortSpinner"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp"
+          android:layout_weight="1" />
+      </LinearLayout>
+
+      <CheckBox
+        android:id="@+id/openServiceOnly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/open_service_only"
+        android:textColor="@color/mako_on_background" />
+
+      <CheckBox
+        android:id="@+id/infrastructureOnly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/infrastructure_only"
+        android:textColor="@color/mako_on_background" />
+
+      <CheckBox
+        android:id="@+id/webInterfacesOnly"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/web_interfaces_only"
+        android:textColor="@color/mako_on_background" />
+    </LinearLayout>
+  </ScrollView>
+
+</androidx.drawerlayout.widget.DrawerLayout>
