@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2
+
+- documented the discovery protocols and Android local-network constraints from primary sources
+- fixed `NetworkMonitor` to use callback-supplied state inside `NetworkCallback` paths
+- added bounded host planning from the active subnet
+- added an automatic bounded TCP host sweep with session summaries and cancellation on network change
+
 ## 0.1.1
 
 - added the first Room-backed per-network record flow
