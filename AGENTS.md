@@ -49,8 +49,7 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - Add or update docs with every new requirement
 - Commit and push after every task; if a push is blocked, surface the blocker immediately
 - Track active multi-step work in `TODO.md` and update the checklist before or during implementation as scope changes
-- Keep `TODO.md` as an active backlog, not a completion log
-- Remove completed items from `TODO.md` instead of leaving checked-off history behind once the project is moving
+- Keep `TODO.md` as an active checklist; the current collaborator preference is to visibly check items off as they are completed
 - For long-running work, land completed sub-tasks incrementally instead of batching unrelated changes together
 
 ## Recursive learning
@@ -63,6 +62,7 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 ## Agent memory checklist
 
 - Repo status: `/home/pierce/projects/mako` now has an Android app scaffold, landing page, initialized git repo, and `origin` set to `git@github.com:pierce403/mako.git`
+- Collaborator preference: keep completed items visibly checked in `TODO.md` instead of pruning them immediately
 - Brand text in the app should use `MAKO`, not lowercase `mako`, unless design copy deliberately calls for it
 - Preserve the shark/Wi-Fi identity: black + red theme, local-network awareness, and per-network history are core product traits, not optional polish
 - Build/test/stage commands: `./gradlew assembleDebug`, `./gradlew installDebug`, and `scripts/stage-apk`

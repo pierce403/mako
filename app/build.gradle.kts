@@ -44,6 +44,8 @@ android {
 
 val lifecycleVersion = "2.7.0"
 val roomVersion = "2.6.1"
+val coroutinesVersion = "1.8.1"
+val dataStoreVersion = "1.1.1"
 
 dependencies {
   implementation("androidx.core:core-ktx:1.13.1")
@@ -52,15 +54,18 @@ dependencies {
   implementation("androidx.constraintlayout:constraintlayout:2.1.4")
   implementation("androidx.recyclerview:recyclerview:1.3.2")
   implementation("androidx.activity:activity-ktx:1.9.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion")
 
   implementation("androidx.lifecycle:lifecycle-runtime-ktx:$lifecycleVersion")
   implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVersion")
+  implementation("androidx.datastore:datastore-preferences:$dataStoreVersion")
 
   implementation("androidx.room:room-runtime:$roomVersion")
   implementation("androidx.room:room-ktx:$roomVersion")
   kapt("androidx.room:room-compiler:$roomVersion")
 
   testImplementation("junit:junit:4.13.2")
+  testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:$coroutinesVersion")
   androidTestImplementation("androidx.test:core:1.6.1")
   androidTestImplementation("androidx.test.ext:junit:1.2.1")
   androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")

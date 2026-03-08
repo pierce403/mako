@@ -4,7 +4,7 @@
 
 - Keep only active, incomplete, or next-up work here
 - Add tasks before starting multi-step work
-- Remove tasks as soon as they are done; do not keep checked-off history here once the app is underway
+- Keep completed items visibly checked so progress stays easy to audit
 - Record completed work in `README.md`, `CHANGELOG.md`, `ARCHITECTURE.md`, or `AGENTS.md` when the result should be remembered
 - Prefer small, actionable items that map cleanly to the MVP
 
@@ -16,30 +16,30 @@
 
 ## Product framing
 
-- [ ] Write a short product brief for `MAKO`: what it is, who it is for, and what the MVP excludes
-- [ ] Define the MVP flow in one line: connect -> identify network -> discover devices -> inspect details -> review timeline
-- [ ] Decide the user-facing terminology for `network`, `device`, `observation`, `fingerprint`, `event`, `session`, and `timeline`
-- [ ] Define what counts as `passive` versus `active` behavior in the app
-- [ ] Decide whether active fingerprinting is opt-in per app, per network, per session, or per device
-- [ ] Write down non-goals to prevent scope creep into generic vulnerability scanning
+- [x] Write a short product brief for `MAKO`: what it is, who it is for, and what the MVP excludes
+- [x] Define the MVP flow in one line: connect -> identify network -> discover devices -> inspect details -> review timeline
+- [x] Decide the user-facing terminology for `network`, `device`, `observation`, `fingerprint`, `event`, `session`, and `timeline`
+- [x] Define what counts as `passive` versus `active` behavior in the app
+- [x] Decide whether active fingerprinting is opt-in per app, per network, per session, or per device
+- [x] Write down non-goals to prevent scope creep into generic vulnerability scanning
 
 ## Visual direction
 
-- [ ] Establish the shark theme: black surfaces, red highlights, aggressive but readable typography, and non-gimmicky motion
-- [ ] Create an icon/logo direction for `MAKO`
-- [ ] Define color, spacing, and typography tokens before the first UI pass
-- [ ] Design visual states for `new network`, `known network`, `live discovery`, `active fingerprinting`, and `offline/unsupported`
-- [ ] Decide how the network summary should look at the top of the main screen
-- [ ] Decide how to visually distinguish `observed`, `inferred`, and `user-labeled` data
+- [x] Establish the shark theme: black surfaces, red highlights, aggressive but readable typography, and non-gimmicky motion
+- [x] Create an icon/logo direction for `MAKO`
+- [x] Define color, spacing, and typography tokens before the first UI pass
+- [x] Design visual states for `new network`, `known network`, `live discovery`, `active fingerprinting`, and `offline/unsupported`
+- [x] Decide how the network summary should look at the top of the main screen
+- [x] Decide how to visually distinguish `observed`, `inferred`, and `user-labeled` data
 
 ## App scaffold
 
-- [ ] Initialize the Android app structure with Gradle wrapper, app module, and package namespace
-- [ ] Decide `applicationId`, namespace, min SDK, target SDK, and Kotlin/JVM settings
-- [ ] Add core dependencies: Room, coroutines, lifecycle/viewmodel, RecyclerView or Compose stack, DataStore, test libs
-- [ ] Add a CLI-first setup path for Android SDK/JDK installation and verification
-- [ ] Add formatting, lint, and test commands to the docs as soon as the scaffold exists
-- [ ] Decide whether the app architecture stays close to `unagi` or shifts to a more modular network/discovery pipeline
+- [x] Initialize the Android app structure with Gradle wrapper, app module, and package namespace
+- [x] Decide `applicationId`, namespace, min SDK, target SDK, and Kotlin/JVM settings
+- [x] Add core dependencies: Room, coroutines, lifecycle/viewmodel, RecyclerView or Compose stack, DataStore, test libs
+- [x] Add a CLI-first setup path for Android SDK/JDK installation and verification
+- [x] Add formatting, lint, and test commands to the docs as soon as the scaffold exists
+- [x] Decide whether the app architecture stays close to `unagi` or shifts to a more modular network/discovery pipeline
 
 ## Network identity
 
@@ -206,18 +206,18 @@
 
 ## Documentation
 
-- [ ] Write `README.md`
-- [ ] Write `ARCHITECTURE.md`
-- [ ] Write `FEATURES.md`
-- [ ] Write `PRIVACY.md`
-- [ ] Document the discovery stack, trust model, and active fingerprinting safeguards
-- [ ] Document exact build/test/install commands once the Android project exists
+- [x] Write `README.md`
+- [x] Write `ARCHITECTURE.md`
+- [x] Write `FEATURES.md`
+- [x] Write `PRIVACY.md`
+- [x] Document the discovery stack, trust model, and active fingerprinting safeguards
+- [x] Document exact build/test/install commands once the Android project exists
 - [ ] Document any protocol exclusions or platform limitations discovered during implementation
 
 ## Release and project hygiene
 
-- [ ] Initialize git for the repo if that is still missing when implementation starts
-- [ ] Add `.gitignore`, editor settings, and basic repo hygiene files once the scaffold exists
-- [ ] Decide whether the project gets a landing page and versioned APK download flow like `unagi`
-- [ ] If a landing page exists, keep app branding, screenshots, and APK links aligned with releases
-- [ ] Add a changelog once real implementation work starts landing
+- [x] Initialize git for the repo if that is still missing when implementation starts
+- [x] Add `.gitignore`, editor settings, and basic repo hygiene files once the scaffold exists
+- [x] Decide whether the project gets a landing page and versioned APK download flow like `unagi`
+- [x] If a landing page exists, keep app branding, screenshots, and APK links aligned with releases
+- [x] Add a changelog once real implementation work starts landing

@@ -7,6 +7,15 @@
 - `discovery`: subnet sweeps, passive service discovery, and active fingerprinting
 - `data`: Room entities, DAOs, repositories, and timeline generation
 
+## Architecture decision
+
+`MAKO` should work like `unagi` operationally, but not as a line-for-line structural clone. The chosen direction is a more modular pipeline where:
+
+- `network` owns current-link state and network identity inputs
+- `discovery` owns local discovery and active probing controllers
+- `data` owns per-network persistence and timeline derivation
+- `ui` consumes derived state rather than orchestrating protocol work directly
+
 ## MVP storage shape
 
 ### Network

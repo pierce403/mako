@@ -6,5 +6,6 @@
 - no cloud sync is part of the MVP
 - active fingerprinting should be explicit, bounded, and visible in the UI
 - diagnostics export, if present, must be user-triggered and clearly labeled
+- active fingerprinting is intended to stay opt-in per network, with manual per-device actions inside that enabled context
 
 The app will document which local protocols it uses as discovery modules land.
