@@ -18,18 +18,41 @@ class NetworkMonitor(context: Context) {
     context.applicationContext.getSystemService(ConnectivityManager::class.java)
 
   fun snapshots(): Flow<NetworkSnapshot> = callbackFlow {
+    var state = initialState()
+
+    fun updateNetwork(network: Network) {
+      if (state.network != network) {
+        state = ObservedNetworkState(network = network)
+      }
+    }
+
     fun publish() {
-      trySend(buildSnapshot())
+      trySend(buildSnapshot(state))
     }
 
     val callback = object : ConnectivityManager.NetworkCallback() {
-      override fun onAvailable(network: Network) = publish()
+      override fun onAvailable(network: Network) {
+        updateNetwork(network)
+      }
 
-      override fun onLost(network: Network) = publish()
+      override fun onLost(network: Network) {
+        if (state.network == network) {
+          state = ObservedNetworkState()
+          publish()
+        }
+      }
 
-      override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) = publish()
+      override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+        updateNetwork(network)
+        state = state.copy(capabilities = networkCapabilities)
+        publish()
+      }
 
-      override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) = publish()
+      override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) {
+        updateNetwork(network)
+        state = state.copy(linkProperties = linkProperties)
+        publish()
+      }
     }
 
     publish()
@@ -40,10 +63,18 @@ class NetworkMonitor(context: Context) {
     }
   }.distinctUntilChanged()
 
-  private fun buildSnapshot(): NetworkSnapshot {
-    val activeNetwork = connectivityManager.activeNetwork ?: return NetworkSnapshot()
-    val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
-    val linkProperties = connectivityManager.getLinkProperties(activeNetwork)
+  private fun initialState(): ObservedNetworkState {
+    val activeNetwork = connectivityManager.activeNetwork ?: return ObservedNetworkState()
+    return ObservedNetworkState(
+      network = activeNetwork,
+      capabilities = connectivityManager.getNetworkCapabilities(activeNetwork),
+      linkProperties = connectivityManager.getLinkProperties(activeNetwork)
+    )
+  }
+
+  private fun buildSnapshot(state: ObservedNetworkState): NetworkSnapshot {
+    val capabilities = state.capabilities
+    val linkProperties = state.linkProperties
     val bestAddress = selectBestAddress(linkProperties?.linkAddresses.orEmpty())
 
     return NetworkSnapshot(
@@ -62,7 +93,7 @@ class NetworkMonitor(context: Context) {
       domains = linkProperties?.domains?.takeUnless { it.isBlank() },
       privateDnsServerName =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) linkProperties?.privateDnsServerName else null,
-      isMetered = connectivityManager.isActiveNetworkMetered,
+      isMetered = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED) == false,
       isValidated = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) == true,
       hasCaptivePortal = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL) == true,
       hasVpnTransport = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
@@ -105,4 +136,10 @@ class NetworkMonitor(context: Context) {
     val networkAddress = InetAddress.getByAddress(maskedAddress).hostAddress
     return "$networkAddress/${linkAddress.prefixLength}"
   }
+
+  private data class ObservedNetworkState(
+    val network: Network? = null,
+    val capabilities: NetworkCapabilities? = null,
+    val linkProperties: LinkProperties? = null
+  )
 }

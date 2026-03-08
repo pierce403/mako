@@ -70,6 +70,7 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - App/package identity is now `ninja.mako`
 - `scripts/stage-apk` stages `downloads/mako-v<version>-debug.apk` and rewrites download links in `index.html`
 - The current app shell already monitors active link properties through `ConnectivityManager` and `LinkProperties`; discovery/fingerprinting layers should extend that instead of replacing it
+- `NetworkMonitor` should use callback-supplied `NetworkCapabilities` and `LinkProperties` state inside `NetworkCallback` paths; only the initial snapshot should use synchronous getters
 - First-pass `networkKey` derivation now hashes stable Wi-Fi link inputs from `NetworkIdentityFactory`: transport, subnet CIDR, gateway, sorted DNS set, search domains, and private DNS name
 - Current `networkKey` intentionally excludes ephemeral local host address and still excludes SSID/BSSID until the Android permission posture is documented and validated
 - Network records now persist raw identity inputs alongside the derived key in Room so grouping logic can be revised later without losing the original evidence
