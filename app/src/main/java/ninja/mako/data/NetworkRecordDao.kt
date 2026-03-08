@@ -19,4 +19,7 @@ interface NetworkRecordDao {
 
   @Query("SELECT COUNT(*) FROM network_records")
   fun observeCount(): Flow<Int>
+
+  @Query("SELECT * FROM network_records ORDER BY lastConnectedAt DESC, lastSeenAt DESC")
+  fun observeAll(): Flow<List<NetworkRecordEntity>>
 }

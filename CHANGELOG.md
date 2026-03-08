@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+- added a remembered Wi-Fi network strip above the device cards, with the currently selected active network marked `LIVE`
+- fixed the main inventory layout so the device-card RecyclerView reliably gets the remaining screen height under the toolbar and summary card
+- kept the `UNAGI`-style device cards, but made them explicitly scoped to the selected live network
+
 ## 0.1.4
 
 - changed the main screen to a drawer-backed device list layout modeled after `unagi`

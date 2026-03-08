@@ -17,6 +17,11 @@
   <string name="wifi_required_warning">MAKO only builds network inventory while connected to Wi-Fi.</string>
   <string name="device_list_title">Detected devices</string>
   <string name="device_list_summary_default">No responsive hosts detected yet.</string>
+  <string name="network_list_title">Remembered Wi-Fi networks</string>
+  <string name="network_list_subtitle">The currently selected network is marked LIVE when this phone is still on it.</string>
+  <string name="network_list_empty">No remembered Wi-Fi networks yet.</string>
+  <string name="devices_section_subtitle_live">Showing device cards for the currently selected live network.</string>
+  <string name="devices_section_subtitle_offline">Connect to one of the remembered Wi-Fi networks to populate live device cards.</string>
   <string name="empty_state_wifi_required">Connect to Wi-Fi to start local discovery.</string>
   <string name="empty_state_scanning">Scanning this subnet now. Responsive devices will appear here as MAKO finds them.</string>
   <string name="empty_state_filters">No detected devices match the current filters.</string>

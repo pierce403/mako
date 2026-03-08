@@ -59,4 +59,6 @@ class NetworkRepository(context: Context) {
   fun observeRecord(networkKey: String): Flow<NetworkRecordEntity?> = dao.observeByKey(networkKey)
 
   fun observeCount(): Flow<Int> = dao.observeCount()
+
+  fun observeAllRecords(): Flow<List<NetworkRecordEntity>> = dao.observeAll()
 }

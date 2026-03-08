@@ -21,7 +21,10 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.DateFormat
+import java.util.Date
 import ninja.mako.data.NetworkRepository
+import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.discovery.HostDiscoveryPlan
 import ninja.mako.discovery.HostProbeOutcome
@@ -71,6 +74,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
       initialValue = 0
+    )
+
+  private val knownNetworkRecords = repository
+    .observeAllRecords()
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+      initialValue = emptyList()
     )
 
   private val discoveryPlan = networkSnapshots
@@ -237,6 +248,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       initialValue = "No responsive hosts detected yet."
     )
 
+  val knownNetworks: StateFlow<List<KnownNetworkListItem>> = combine(
+    knownNetworkRecords,
+    currentNetworkKey
+  ) { records, activeKey ->
+    withContext(Dispatchers.Default) {
+      buildKnownNetworks(records, activeKey)
+    }
+  }
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+      initialValue = emptyList()
+    )
+
   val uiState: StateFlow<MainUiState> = combine(
     networkSnapshots,
     currentNetworkRecord,
@@ -358,6 +383,39 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         )
       }
       .distinctBy { it.deviceKey }
+  }
+
+  private fun buildKnownNetworks(
+    records: List<NetworkRecordEntity>,
+    activeNetworkKey: String?
+  ): List<KnownNetworkListItem> {
+    return records.map { record ->
+      val isLive = record.networkKey == activeNetworkKey
+      KnownNetworkListItem(
+        networkKey = record.networkKey,
+        title = record.subnet ?: record.gateway ?: "Wi-Fi network",
+        subtitle = buildNetworkSubtitle(record),
+        badgeLabel = if (isLive) "LIVE" else "KNOWN",
+        isSelected = isLive,
+        isLive = isLive
+      )
+    }
+  }
+
+  private fun buildNetworkSubtitle(record: NetworkRecordEntity): String {
+    val lastConnected = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
+      .format(Date(record.lastConnectedAt))
+    val detail = buildList {
+      record.gateway?.let { gateway -> add("Gateway $gateway") }
+      record.domains?.takeIf { it.isNotBlank() }?.let(::add)
+      add("Seen ${record.activationCount} time${if (record.activationCount == 1) "" else "s"}")
+    }.joinToString(" • ")
+
+    return if (detail.isBlank()) {
+      "Last connected $lastConnected"
+    } else {
+      "$detail • Last connected $lastConnected"
+    }
   }
 
   private fun formatTimeAgo(timestamp: Long): String {

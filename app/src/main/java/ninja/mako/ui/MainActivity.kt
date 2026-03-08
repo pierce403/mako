@@ -14,6 +14,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import ninja.mako.R
@@ -24,6 +25,7 @@ class MainActivity : AppCompatActivity() {
   private lateinit var binding: ActivityMainBinding
   private val viewModel: MainViewModel by viewModels()
   private lateinit var adapter: DeviceAdapter
+  private lateinit var knownNetworkAdapter: KnownNetworkAdapter
   private var toolbarBaseTopPadding = 0
   private var deviceListBaseBottomPadding = 0
   private var filterDrawerBaseTopPadding = 0
@@ -53,6 +55,12 @@ class MainActivity : AppCompatActivity() {
     filterDrawerBaseBottomPadding = binding.filterDrawerContent.paddingBottom
 
     adapter = DeviceAdapter()
+    knownNetworkAdapter = KnownNetworkAdapter()
+
+    binding.networkList.layoutManager = LinearLayoutManager(this, HORIZONTAL, false)
+    binding.networkList.adapter = knownNetworkAdapter
+    binding.networkList.itemAnimator = null
+
     binding.deviceList.layoutManager = LinearLayoutManager(this)
     binding.deviceList.adapter = adapter
     binding.deviceList.itemAnimator = null
@@ -122,6 +130,13 @@ class MainActivity : AppCompatActivity() {
           viewModel.filterState.collect(::renderFilters)
         }
         launch {
+          viewModel.knownNetworks.collect { networks ->
+            knownNetworkAdapter.submitList(networks)
+            binding.networkList.isVisible = networks.isNotEmpty()
+            binding.networkListEmpty.isVisible = networks.isEmpty()
+          }
+        }
+        launch {
           viewModel.deviceListSummary.collect { summary ->
             binding.listSummary.text = summary
           }
@@ -140,6 +155,7 @@ class MainActivity : AppCompatActivity() {
     binding.networkScopeSummary.text = buildNetworkScopeSummary(state)
     binding.discoverySummary.text = state.discoverySummary
     binding.networkMemorySummary.text = state.networkMemorySummary
+    binding.devicesSectionSubtitle.text = buildDevicesSectionSubtitle(state)
     latestDiagnosticsReport = state.diagnosticsReport
 
     binding.wifiWarning.isVisible = state.showWifiWarning
@@ -175,6 +191,13 @@ class MainActivity : AppCompatActivity() {
         add(state.validation)
       }
     }.joinToString("  •  ")
+  }
+
+  private fun buildDevicesSectionSubtitle(state: MainUiState): String {
+    return when {
+      state.showWifiWarning -> getString(R.string.devices_section_subtitle_offline)
+      else -> getString(R.string.devices_section_subtitle_live)
+    }
   }
 
   private fun updateEmptyState() {

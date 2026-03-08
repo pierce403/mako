@@ -134,7 +134,7 @@
 - [ ] Show discovery state, last sweep time, active fingerprinting state, and any notable failures
 - [ ] Add sorting and filtering for live status, hostname, IP, confidence, last seen, and likely device category
 - [ ] Add strong empty states for `not on Wi-Fi`, `new network with no discoveries yet`, and `permissions missing`
-- [ ] Make it obvious that data is scoped to the current network record
+- [x] Make it obvious that data is scoped to the current network record
 
 ## Device detail UI
 
