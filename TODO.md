@@ -212,7 +212,7 @@
 - [x] Write `PRIVACY.md`
 - [x] Document the discovery stack, trust model, and active fingerprinting safeguards
 - [x] Document exact build/test/install commands once the Android project exists
-- [ ] Document any protocol exclusions or platform limitations discovered during implementation
+- [x] Document any protocol exclusions or platform limitations discovered during implementation
 
 ## Release and project hygiene
 

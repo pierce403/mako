@@ -69,6 +69,11 @@ Current architecture direction: stay operationally similar to `unagi`, but use a
 
 Android SDK setup instructions live in [docs/SETUP_ANDROID.md](/home/pierce/projects/mako/docs/SETUP_ANDROID.md).
 
+Protocol and platform notes live in:
+
+- [docs/DISCOVERY_PROTOCOLS.md](/home/pierce/projects/mako/docs/DISCOVERY_PROTOCOLS.md)
+- [docs/ANDROID_LOCAL_NETWORK.md](/home/pierce/projects/mako/docs/ANDROID_LOCAL_NETWORK.md)
+
 ## Near-term work
 
 - prove the feasible Android local-network discovery stack
