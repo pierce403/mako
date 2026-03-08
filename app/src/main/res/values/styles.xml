@@ -1,0 +1,14 @@
+<resources>
+  <style name="MakoTextInputStyle" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+    <item name="boxBackgroundColor">@color/mako_surface_variant</item>
+    <item name="boxStrokeColor">@color/mako_secondary</item>
+    <item name="boxStrokeWidth">1dp</item>
+    <item name="boxStrokeWidthFocused">2dp</item>
+    <item name="hintTextColor">@color/mako_secondary</item>
+  </style>
+
+  <style name="MakoSpinnerStyle" parent="Widget.AppCompat.Spinner.Underlined">
+    <item name="android:backgroundTint">@color/mako_secondary</item>
+    <item name="android:popupBackground">@color/mako_surface_variant</item>
+  </style>
+</resources>

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  xmlns:app="http://schemas.android.com/apk/res-auto"
+  android:layout_width="match_parent"
+  android:layout_height="match_parent"
+  android:background="@color/mako_background"
+  android:orientation="vertical">
+
+  <com.google.android.material.appbar.MaterialToolbar
+    android:id="@+id/toolbar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/mako_surface"
+    android:elevation="0dp"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+    app:subtitleTextColor="@color/mako_secondary"
+    app:titleTextColor="@color/mako_on_surface" />
+
+  <View
+    android:layout_width="match_parent"
+    android:layout_height="1dp"
+    android:background="@color/mako_stroke_soft" />
+
+  <androidx.core.widget.NestedScrollView
+    android:id="@+id/scrollContent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingBottom="24dp">
+
+    <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:padding="16dp">
+
+      <TextView
+        android:id="@+id/eyebrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/badge_surface"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/eyebrow_waiting"
+        android:textAllCaps="true"
+        android:textColor="@color/mako_secondary"
+        android:textStyle="bold" />
+
+      <TextView
+        android:id="@+id/headline"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/headline_default"
+        android:textColor="@color/mako_on_surface"
+        android:textSize="34sp"
+        android:textStyle="bold" />
+
+      <TextView
+        android:id="@+id/subhead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:lineSpacingExtra="4dp"
+        android:text="@string/subhead_default"
+        android:textColor="@color/mako_on_background"
+        android:textSize="16sp" />
+
+      <TextView
+        android:id="@+id/statusBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/badge_surface"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/status_offline"
+        android:textColor="@color/mako_secondary"
+        android:textStyle="bold" />
+
+      <TextView
+        android:id="@+id/wifiWarning"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/panel_surface_subtle"
+        android:padding="16dp"
+        android:text="@string/wifi_required_warning"
+        android:textColor="@color/mako_on_background" />
+
+      <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="@color/mako_surface_variant"
+        app:cardCornerRadius="24dp"
+        app:strokeColor="@color/mako_stroke"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:padding="18dp">
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/network_facts_title"
+            android:textAllCaps="true"
+            android:textColor="@color/mako_secondary"
+            android:textStyle="bold" />
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_transport"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/transportValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_interface"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/interfaceValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_local_address"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/localAddressValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_subnet"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/subnetValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_gateway"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/gatewayValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_dns"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/dnsValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_domains"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/domainsValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_private_dns"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/privateDnsValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+
+          <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+              android:layout_width="112dp"
+              android:layout_height="wrap_content"
+              android:text="@string/fact_validation"
+              android:textColor="@color/mako_on_background" />
+
+            <TextView
+              android:id="@+id/validationValue"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:layout_weight="1"
+              android:textColor="@color/mako_on_surface"
+              android:textStyle="bold" />
+          </LinearLayout>
+        </LinearLayout>
+      </com.google.android.material.card.MaterialCardView>
+
+      <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="@color/mako_surface_variant"
+        app:cardCornerRadius="24dp"
+        app:strokeColor="@color/mako_stroke"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:padding="18dp">
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/discovery_runway_title"
+            android:textAllCaps="true"
+            android:textColor="@color/mako_secondary"
+            android:textStyle="bold" />
+
+          <TextView
+            android:id="@+id/discoverySummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:lineSpacingExtra="4dp"
+            android:text="@string/discovery_summary_default"
+            android:textColor="@color/mako_on_background" />
+        </LinearLayout>
+      </com.google.android.material.card.MaterialCardView>
+
+      <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        app:cardBackgroundColor="@color/mako_surface_variant"
+        app:cardCornerRadius="24dp"
+        app:strokeColor="@color/mako_stroke"
+        app:strokeWidth="1dp">
+
+        <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="vertical"
+          android:padding="18dp">
+
+          <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/network_memory_title"
+            android:textAllCaps="true"
+            android:textColor="@color/mako_secondary"
+            android:textStyle="bold" />
+
+          <TextView
+            android:id="@+id/networkMemorySummary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:lineSpacingExtra="4dp"
+            android:text="@string/network_memory_summary_default"
+            android:textColor="@color/mako_on_background" />
+        </LinearLayout>
+      </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+  </androidx.core.widget.NestedScrollView>
+</LinearLayout>

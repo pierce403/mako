@@ -1,0 +1,26 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+  <style name="Theme.Mako" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <item name="colorPrimary">@color/mako_primary</item>
+    <item name="colorPrimaryVariant">@color/mako_primary_variant</item>
+    <item name="colorSecondary">@color/mako_secondary</item>
+    <item name="colorSecondaryVariant">@color/mako_secondary_variant</item>
+    <item name="colorSurface">@color/mako_surface</item>
+    <item name="colorSurfaceVariant">@color/mako_surface_variant</item>
+    <item name="android:colorBackground">@color/mako_background</item>
+    <item name="colorOnPrimary">@color/mako_on_primary</item>
+    <item name="colorOnSecondary">@color/mako_on_secondary</item>
+    <item name="colorOnBackground">@color/mako_on_background</item>
+    <item name="colorOnSurface">@color/mako_on_surface</item>
+    <item name="android:statusBarColor" tools:targetApi="l">@color/mako_background</item>
+    <item name="android:navigationBarColor" tools:targetApi="o_mr1">@color/mako_background</item>
+    <item name="android:windowBackground">@color/mako_background</item>
+    <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
+    <item name="android:textColorPrimary">@color/mako_on_surface</item>
+    <item name="android:textColorSecondary">@color/mako_on_background</item>
+    <item name="colorControlActivated">@color/mako_secondary</item>
+    <item name="colorControlNormal">@color/mako_on_surface</item>
+    <item name="textInputStyle">@style/MakoTextInputStyle</item>
+    <item name="spinnerStyle">@style/MakoSpinnerStyle</item>
+  </style>
+</resources>

@@ -1,0 +1,77 @@
+# AGENTS
+
+## Mission
+
+Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
+
+`MAKO` is a local-only Android situational-awareness app for the Wi-Fi network the device is currently on. The product should feel like the shark-themed sibling of `unagi`: black and red visual language, fast local awareness, no cloud dependency, and a clear separation between what was observed and what is only inferred.
+
+## Hard constraints
+
+- No Android Studio usage (everything must work via CLI + VS Code)
+- Reproducible environment setup (script + docs)
+- No cloud; no remote logging by default
+- Scope discovery to the network the phone is currently on; do not turn MVP work into a generic internet scanner
+- Keep passive network context gathering separate from active fingerprinting
+- Treat network identity, device identity, DNS names, and service banners as best-effort evidence, not ground truth
+
+## Toolchain rules
+
+- Use Android SDK Command-line Tools (`sdkmanager`, `adb`, etc.)
+- Require JDK 17 unless the Android toolchain changes and docs are updated accordingly
+- Pin AGP/Gradle versions using the official compatibility matrix; avoid dynamic versions
+
+## Definition of Done (MVP)
+
+- On a physical Android device connected to Wi-Fi: the app can identify the current network, discover local devices, persist those results locally, and show them again after relaunch
+- Returning to a previously seen network restores its device inventory and timeline instead of starting from scratch
+- Connecting to a different network creates a blank slate for that network without polluting other network records
+- A network detail view exposes a scrollable timeline showing device arrivals, departures, and meaningful fingerprint/name/service changes over time
+- Permission handling and unsupported-state UX are robust (Wi-Fi off, not on Wi-Fi, discovery blocked, partial probe failures, DNS failures)
+- No crashes when active fingerprinting is disabled, unavailable, or only partially successful
+
+## Implementation guidance
+
+- The primary storage boundary is the network record. Do not build MVP around a single global device table that silently merges data across unrelated networks.
+- Same SSID does not imply the same real network. Network grouping should use multiple inputs with stored confidence and raw evidence.
+- Preserve raw observations so identity/fingerprinting logic can be improved later without losing history.
+- Keep passive discovery results separate from active fingerprinting results. Active probes should enrich history, not overwrite the raw observation record.
+- DNS-derived names are hints. Reverse lookups, mDNS, NetBIOS, LLMNR, DHCP hostnames, HTTP titles, TLS certs, and SSDP descriptors can disagree or go stale.
+- Device identity inside one network is still approximate. IPs can churn, hostnames can be reused, and MAC visibility may be limited.
+- Timeline events should be derived from meaningful state transitions: first seen, returned, absent, renamed, newly fingerprinted, fingerprint changed, service set changed.
+- Optimize for battery and network civility: bounded sweeps, protocol-specific rate limits, concurrency caps, and cancellation on network change.
+- Make it obvious when discovery or fingerprinting is active, what protocols are being used, and why a device classification was assigned.
+- Local-only remains the default posture. If export or sharing is added later, it must be explicit and user-controlled.
+
+## PR discipline
+
+- Small PRs, each linked to a `TODO.md` item
+- Add or update docs with every new requirement
+- Commit and push after every task; if a push is blocked, surface the blocker immediately
+- Track active multi-step work in `TODO.md` and update the checklist before or during implementation as scope changes
+- Keep `TODO.md` as an active backlog, not a completion log
+- Remove completed items from `TODO.md` instead of leaving checked-off history behind once the project is moving
+- For long-running work, land completed sub-tasks incrementally instead of batching unrelated changes together
+
+## Recursive learning
+
+- Update `AGENTS.md` whenever you learn anything important about the project, workflow, or collaborator preferences
+- Capture both wins and misses: what to repeat, what to avoid, and any blocker that slowed delivery
+- Keep notes concrete and reusable: build/test commands, deployment steps, project structure, coding conventions, pitfalls, and formatting preferences
+- Prefer small, timely updates in the same task that revealed the learning, and replace stale guidance when it is superseded
+
+## Agent memory checklist
+
+- Repo status: `/home/pierce/projects/mako` now has an Android app scaffold, landing page, initialized git repo, and `origin` set to `git@github.com:pierce403/mako.git`
+- Brand text in the app should use `MAKO`, not lowercase `mako`, unless design copy deliberately calls for it
+- Preserve the shark/Wi-Fi identity: black + red theme, local-network awareness, and per-network history are core product traits, not optional polish
+- Build/test/stage commands: `./gradlew assembleDebug`, `./gradlew installDebug`, and `scripts/stage-apk`
+- Local Android SDK on this workstation is at `/home/pierce/Android/Sdk`; `local.properties` currently points there for local builds
+- App/package identity is now `ninja.mako`
+- `scripts/stage-apk` stages `downloads/mako-v<version>-debug.apk` and rewrites download links in `index.html`
+- The current app shell already monitors active link properties through `ConnectivityManager` and `LinkProperties`; discovery/fingerprinting layers should extend that instead of replacing it
+- Record the exact Android permission posture here once the discovery stack is chosen; SSID/BSSID and multicast discovery may vary by API level
+- Record the exact `networkKey` derivation and merge/split rules here once implemented
+- Record probe defaults and rate limits here once active fingerprinting exists
+- If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+
+- When shipping user-visible APK changes, bump `versionCode` and `versionName` and keep the installed version visible somewhere obvious such as Diagnostics/about

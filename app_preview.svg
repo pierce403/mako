@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0d0406"/>
+      <stop offset="1" stop-color="#1d0a0f"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="#1f0b10"/>
+      <stop offset="1" stop-color="#14070a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#ff7176"/>
+      <stop offset="1" stop-color="#c5162e"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="720" rx="40" fill="#090203"/>
+  <rect x="40" y="40" width="880" height="640" rx="34" fill="url(#bg)" stroke="#3c1117" stroke-width="2"/>
+  <circle cx="128" cy="112" r="18" fill="#ff6f72"/>
+  <text x="168" y="124" fill="#fff3f4" font-family="Arial Narrow, sans-serif" font-size="44" letter-spacing="8">MAKO</text>
+  <rect x="74" y="166" width="812" height="158" rx="28" fill="url(#card)" stroke="#5a1822" stroke-width="2"/>
+  <text x="106" y="214" fill="#ff8a90" font-family="Arial Narrow, sans-serif" font-size="22" letter-spacing="4">CURRENT WATER</text>
+  <text x="106" y="270" fill="#fff3f4" font-family="Arial Narrow, sans-serif" font-size="54">Wi-Fi transport active</text>
+  <text x="106" y="308" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">Link context captured now. Discovery, naming, and timeline layers attach next.</text>
+  <rect x="106" y="234" width="156" height="34" rx="17" fill="#2b0e14" stroke="#7a2632"/>
+  <text x="132" y="257" fill="#ff979b" font-family="Arial, sans-serif" font-size="18">Wi-Fi online</text>
+  <rect x="74" y="356" width="388" height="248" rx="28" fill="url(#card)" stroke="#5a1822" stroke-width="2"/>
+  <rect x="498" y="356" width="388" height="248" rx="28" fill="url(#card)" stroke="#5a1822" stroke-width="2"/>
+  <text x="106" y="404" fill="#ff8a90" font-family="Arial Narrow, sans-serif" font-size="22" letter-spacing="4">NETWORK FACTS</text>
+  <text x="106" y="454" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">Transport</text>
+  <text x="278" y="454" fill="#fff3f4" font-family="Arial, sans-serif" font-size="24">Wi-Fi</text>
+  <text x="106" y="494" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">Local address</text>
+  <text x="278" y="494" fill="#fff3f4" font-family="Arial, sans-serif" font-size="24">192.168.1.44/24</text>
+  <text x="106" y="534" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">Gateway</text>
+  <text x="278" y="534" fill="#fff3f4" font-family="Arial, sans-serif" font-size="24">192.168.1.1</text>
+  <text x="106" y="574" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">DNS</text>
+  <text x="278" y="574" fill="#fff3f4" font-family="Arial, sans-serif" font-size="24">192.168.1.1, 1.1.1.1</text>
+  <text x="530" y="404" fill="#ff8a90" font-family="Arial Narrow, sans-serif" font-size="22" letter-spacing="4">DISCOVERY RUNWAY</text>
+  <text x="530" y="454" fill="#fff3f4" font-family="Arial Narrow, sans-serif" font-size="38">PTR + mDNS + SSDP</text>
+  <text x="530" y="492" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">Bounded sweeps, local-only probes, and evidence-scored fingerprints.</text>
+  <text x="530" y="554" fill="#ff8a90" font-family="Arial Narrow, sans-serif" font-size="22" letter-spacing="4">NETWORK MEMORY</text>
+  <text x="530" y="592" fill="#d8aab1" font-family="Arial, sans-serif" font-size="24">Reconnect to this network and the old device inventory returns with it.</text>
+  <path d="M770 116c18 14 40 22 68 24-18 10-33 24-44 42-6-19-17-34-33-46 4-8 7-14 9-20Z" fill="url(#accent)" opacity=".9"/>
+</svg>

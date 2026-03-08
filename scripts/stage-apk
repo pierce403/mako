@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SOURCE_APK="$ROOT_DIR/app/build/outputs/apk/debug/app-debug.apk"
+TARGET_DIR="$ROOT_DIR/downloads"
+VERSION_NAME="$(sed -n 's/.*versionName = "\(.*\)"/\1/p' "$ROOT_DIR/app/build.gradle.kts" | head -n 1)"
+
+if [[ -z "$VERSION_NAME" ]]; then
+  printf "[mako] ERROR: could not read versionName from app/build.gradle.kts\n" >&2
+  exit 1
+fi
+
+TARGET_BASENAME="mako-v${VERSION_NAME}-debug.apk"
+TARGET_APK="$TARGET_DIR/$TARGET_BASENAME"
+INDEX_HTML="$ROOT_DIR/index.html"
+
+if [[ ! -f "$SOURCE_APK" ]]; then
+  printf "[mako] ERROR: missing APK at %s\n" "$SOURCE_APK" >&2
+  printf "[mako] Run ./gradlew assembleDebug first.\n" >&2
+  exit 1
+fi
+
+mkdir -p "$TARGET_DIR"
+rm -f "$TARGET_DIR"/mako-debug.apk "$TARGET_DIR"/mako-v*-debug.apk
+install -m 0644 "$SOURCE_APK" "$TARGET_APK"
+
+python3 - <<'PY' "$INDEX_HTML" "$TARGET_BASENAME"
+from pathlib import Path
+import re
+import sys
+
+index_path = Path(sys.argv[1])
+apk_name = sys.argv[2]
+contents = index_path.read_text()
+updated = re.sub(
+    r"downloads/mako(?:-v[0-9A-Za-z._-]+)?-debug\.apk",
+    f"downloads/{apk_name}",
+    contents,
+)
+index_path.write_text(updated)
+PY
+
+printf "[mako] Staged APK at %s\n" "$TARGET_APK"
+printf "[mako] Updated website download links to downloads/%s\n" "$TARGET_BASENAME"

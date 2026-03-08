@@ -1,0 +1,24 @@
+<resources>
+  <string name="app_name">MAKO</string>
+  <string name="app_name_header">MAKO</string>
+  <string name="app_subtitle">Wi-Fi network awareness</string>
+  <string name="eyebrow_waiting">Awaiting Wi-Fi link</string>
+  <string name="headline_default">No active network</string>
+  <string name="subhead_default">Connect to Wi-Fi to start local discovery and per-network memory.</string>
+  <string name="status_offline">Offline</string>
+  <string name="wifi_required_warning">MAKO only builds network inventory while connected to Wi-Fi.</string>
+  <string name="network_facts_title">Network facts</string>
+  <string name="fact_transport">Transport</string>
+  <string name="fact_interface">Interface</string>
+  <string name="fact_local_address">Local IP</string>
+  <string name="fact_subnet">Subnet</string>
+  <string name="fact_gateway">Gateway</string>
+  <string name="fact_dns">DNS</string>
+  <string name="fact_domains">Domains</string>
+  <string name="fact_private_dns">Private DNS</string>
+  <string name="fact_validation">Status</string>
+  <string name="discovery_runway_title">Discovery runway</string>
+  <string name="discovery_summary_default">Discovery stack scaffolded. Subnet sweeps, PTR, mDNS, SSDP, and service fingerprinting land next.</string>
+  <string name="network_memory_title">Network memory</string>
+  <string name="network_memory_summary_default">No active Wi-Fi network means no current network record to attach history to yet.</string>
+</resources>

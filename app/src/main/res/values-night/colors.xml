@@ -1,0 +1,15 @@
+<resources>
+  <color name="mako_primary">#C5162E</color>
+  <color name="mako_primary_variant">#7D0B1C</color>
+  <color name="mako_secondary">#FF6F72</color>
+  <color name="mako_secondary_variant">#FF9580</color>
+  <color name="mako_background">#050203</color>
+  <color name="mako_surface">#100608</color>
+  <color name="mako_surface_variant">#1A0C10</color>
+  <color name="mako_on_primary">#FFF8F8</color>
+  <color name="mako_on_secondary">#260407</color>
+  <color name="mako_on_background">#F1D7DB</color>
+  <color name="mako_on_surface">#FFF3F4</color>
+  <color name="mako_stroke">#33FF6F72</color>
+  <color name="mako_stroke_soft">#1FFF6F72</color>
+</resources>
