@@ -20,6 +20,7 @@ class MainActivity : AppCompatActivity() {
   private val viewModel: MainViewModel by viewModels()
   private var toolbarBaseTopPadding = 0
   private var scrollBaseBottomPadding = 0
+  private var latestDiagnosticsReport = ""
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -46,6 +47,10 @@ class MainActivity : AppCompatActivity() {
         viewModel.uiState.collect(::render)
       }
     }
+
+    binding.openDiagnosticsButton.setOnClickListener {
+      startActivity(DiagnosticsActivity.intent(this, latestDiagnosticsReport))
+    }
   }
 
   private fun render(state: MainUiState) {
@@ -66,6 +71,7 @@ class MainActivity : AppCompatActivity() {
 
     binding.discoverySummary.text = state.discoverySummary
     binding.networkMemorySummary.text = state.networkMemorySummary
+    latestDiagnosticsReport = state.diagnosticsReport
 
     binding.wifiWarning.isVisible = state.showWifiWarning
     binding.wifiWarning.text = state.wifiWarning

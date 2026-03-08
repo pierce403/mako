@@ -385,6 +385,13 @@
             android:textColor="@color/mako_on_background" />
         </LinearLayout>
       </com.google.android.material.card.MaterialCardView>
+
+      <com.google.android.material.button.MaterialButton
+        android:id="@+id/openDiagnosticsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/open_diagnostics" />
     </LinearLayout>
   </androidx.core.widget.NestedScrollView>
 </LinearLayout>

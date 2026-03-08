@@ -21,4 +21,9 @@
   <string name="discovery_summary_default">Discovery stack scaffolded. Subnet sweeps, PTR, mDNS, SSDP, and service fingerprinting land next.</string>
   <string name="network_memory_title">Network memory</string>
   <string name="network_memory_summary_default">No active Wi-Fi network means no current network record to attach history to yet.</string>
+  <string name="diagnostics">Diagnostics</string>
+  <string name="open_diagnostics">Open diagnostics</string>
+  <string name="copy_diagnostics_report">Copy diagnostics report</string>
+  <string name="diagnostics_copied">Diagnostics report copied.</string>
+  <string name="diagnostics_warning">Local-only diagnostics. This report clearly includes sensitive values such as local IPs, gateway IPs, DNS servers, and discovered host addresses.</string>
 </resources>

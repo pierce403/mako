@@ -69,7 +69,7 @@
 - [x] Derive the active subnet and candidate host ranges to inspect
 - [x] Implement a bounded host sweep with concurrency limits and cancellation support
 - [x] Track each sweep as a first-class session with start time, end time, status, and summary stats
-- [ ] Capture probe-level outcomes for diagnostics instead of only aggregate counters
+- [x] Capture probe-level outcomes for diagnostics instead of only aggregate counters
 - [x] Stop or pause discovery immediately when Wi-Fi disconnects or the network key changes
 
 ## DNS and local naming tricks
@@ -155,12 +155,12 @@
 
 ## Diagnostics and transparency
 
-- [ ] Create a diagnostics screen/report similar in spirit to `unagi`
-- [ ] Include network identity inputs, sweep summaries, protocol successes/failures, permission state, and current settings
+- [x] Create a diagnostics screen/report similar in spirit to `unagi`
+- [x] Include network identity inputs, sweep summaries, protocol successes/failures, permission state, and current settings
 - [ ] Surface why a device was labeled the way it was
 - [ ] Surface why two observations were merged into one device or kept separate
-- [ ] Add a copy/export path for diagnostics that is explicit and local-only
-- [ ] Redact or clearly label sensitive values in exported diagnostics
+- [x] Add a copy/export path for diagnostics that is explicit and local-only
+- [x] Redact or clearly label sensitive values in exported diagnostics
 
 ## Permissions and platform behavior
 

@@ -24,6 +24,7 @@ data class MainUiState(
   val validation: String = "No active validation state",
   val discoverySummary: String = "Discovery stack scaffolded. Subnet sweeps, PTR, mDNS, SSDP, and service fingerprinting land next.",
   val networkMemorySummary: String = "No active Wi-Fi network means no current network record to attach history to yet.",
+  val diagnosticsReport: String = "No active diagnostics report.",
   val wifiWarning: String = "MAKO only builds network inventory while connected to Wi-Fi.",
   val showWifiWarning: Boolean = true
 ) {
@@ -35,7 +36,17 @@ data class MainUiState(
       discoveryPlan: HostDiscoveryPlan?,
       sweepSession: HostSweepSession?
     ): MainUiState {
-      if (!snapshot.connected) return MainUiState()
+      if (!snapshot.connected) {
+        return MainUiState(
+          diagnosticsReport = buildDiagnosticsReport(
+            snapshot = snapshot,
+            record = record,
+            knownNetworkCount = knownNetworkCount,
+            discoveryPlan = discoveryPlan,
+            sweepSession = sweepSession
+          )
+        )
+      }
 
       val validationBits = buildList {
         if (snapshot.isValidated) add("Validated internet")
@@ -120,6 +131,13 @@ data class MainUiState(
               append(" Basis: ${record.stableInputSummary}.")
             }
           },
+          diagnosticsReport = buildDiagnosticsReport(
+            snapshot = snapshot,
+            record = record,
+            knownNetworkCount = knownNetworkCount,
+            discoveryPlan = discoveryPlan,
+            sweepSession = sweepSession
+          ),
           wifiWarning = "",
           showWifiWarning = false
         )
@@ -139,6 +157,13 @@ data class MainUiState(
           privateDns = snapshot.privateDnsServerName ?: "Off / not advertised",
           validation = validationBits,
           networkMemorySummary = "No per-network Wi-Fi record is active because the current transport is not Wi-Fi.",
+          diagnosticsReport = buildDiagnosticsReport(
+            snapshot = snapshot,
+            record = record,
+            knownNetworkCount = knownNetworkCount,
+            discoveryPlan = discoveryPlan,
+            sweepSession = sweepSession
+          ),
           wifiWarning = "MAKO is intentionally idle for local-network discovery until the device is on Wi-Fi.",
           showWifiWarning = true
         )
@@ -147,6 +172,87 @@ data class MainUiState(
 
     private fun formatTimestamp(timestamp: Long): String {
       return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(timestamp))
+    }
+
+    private fun buildDiagnosticsReport(
+      snapshot: NetworkSnapshot,
+      record: NetworkRecordEntity?,
+      knownNetworkCount: Int,
+      discoveryPlan: HostDiscoveryPlan?,
+      sweepSession: HostSweepSession?
+    ): String {
+      val permissionState =
+        "Current app permissions: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE. SSID/BSSID collection is not enabled yet."
+
+      val settingsState = buildString {
+        append("Host plan budget: 64 hosts.")
+        append("\nTCP sweep ports: 53, 80, 443, 445, 631.")
+        append("\nTCP sweep concurrency: 12 hosts.")
+        append("\nTCP connect timeout: 250 ms.")
+      }
+
+      return buildString {
+        appendLine("MAKO Diagnostics Report")
+        appendLine("Sensitive values included below: local IPs, gateway IP, DNS servers, and discovered host addresses.")
+        appendLine()
+        appendLine("Connectivity")
+        appendLine("Transport: ${snapshot.transportLabel}")
+        appendLine("Connected: ${snapshot.connected}")
+        appendLine("Wi-Fi: ${snapshot.isWifi}")
+        appendLine("Interface: ${snapshot.interfaceName ?: "Unavailable"}")
+        appendLine("Local address: ${snapshot.localAddress ?: "Unavailable"}")
+        appendLine("Subnet: ${snapshot.subnet ?: "Unavailable"}")
+        appendLine("Gateway: ${snapshot.gateway ?: "Unavailable"}")
+        appendLine("DNS servers: ${snapshot.dnsServers.takeIf { it.isNotEmpty() }?.joinToString(", ") ?: "Unavailable"}")
+        appendLine("Domains: ${snapshot.domains ?: "Unavailable"}")
+        appendLine("Private DNS: ${snapshot.privateDnsServerName ?: "Off / not advertised"}")
+        appendLine("Validated: ${snapshot.isValidated}")
+        appendLine("Captive portal: ${snapshot.hasCaptivePortal}")
+        appendLine("Metered: ${snapshot.isMetered}")
+        appendLine("VPN transport: ${snapshot.hasVpnTransport}")
+        appendLine()
+        appendLine("Network Record")
+        appendLine("Known network count: $knownNetworkCount")
+        appendLine("Network key: ${record?.networkKey ?: "Unavailable"}")
+        appendLine("Stable input summary: ${record?.stableInputSummary ?: "Unavailable"}")
+        appendLine("First seen: ${record?.firstSeenAt?.let(::formatTimestamp) ?: "Unavailable"}")
+        appendLine("Last connected: ${record?.lastConnectedAt?.let(::formatTimestamp) ?: "Unavailable"}")
+        appendLine("Activation count: ${record?.activationCount ?: 0}")
+        appendLine()
+        appendLine("Discovery Plan")
+        appendLine("Plan available: ${discoveryPlan != null}")
+        appendLine("Plan subnet: ${discoveryPlan?.subnetCidr ?: "Unavailable"}")
+        appendLine("Candidate hosts: ${discoveryPlan?.candidateHosts?.size ?: 0}")
+        appendLine("Total usable hosts: ${discoveryPlan?.totalUsableHostCount ?: 0}")
+        appendLine("Prioritized hosts: ${discoveryPlan?.prioritizedHosts?.take(12)?.joinToString(", ") ?: "Unavailable"}")
+        appendLine("Plan truncated: ${discoveryPlan?.truncated ?: false}")
+        appendLine()
+        appendLine("Sweep Session")
+        appendLine("Sweep status: ${sweepSession?.status ?: "Unavailable"}")
+        appendLine("Sweep started: ${sweepSession?.startedAt?.let(::formatTimestamp) ?: "Unavailable"}")
+        appendLine("Sweep ended: ${sweepSession?.endedAt?.let(::formatTimestamp) ?: "Unavailable"}")
+        appendLine("Hosts planned: ${sweepSession?.hostsPlanned ?: 0}")
+        appendLine("Hosts attempted: ${sweepSession?.hostsAttempted ?: 0}")
+        appendLine("Reachable hosts: ${sweepSession?.reachableHosts ?: 0}")
+        appendLine("Open-service hosts: ${sweepSession?.openServiceHosts ?: 0}")
+        appendLine("Ports probed: ${sweepSession?.portsProbed?.joinToString(", ") ?: "Unavailable"}")
+        appendLine("Reachable samples: ${sweepSession?.sampleReachableHosts?.joinToString(", ") ?: "Unavailable"}")
+        appendLine()
+        appendLine("Per-host probe results")
+        if (sweepSession?.results.isNullOrEmpty()) {
+          appendLine("No probe results captured yet.")
+        } else {
+          sweepSession?.results?.forEach { result ->
+            appendLine("${result.host} -> ${result.outcome}${result.port?.let { port -> " on $port" } ?: ""}")
+          }
+        }
+        appendLine()
+        appendLine("Permission posture")
+        appendLine(permissionState)
+        appendLine()
+        appendLine("Current settings")
+        appendLine(settingsState)
+      }.trimEnd()
     }
   }
 }
