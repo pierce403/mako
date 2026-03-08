@@ -10,9 +10,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import ninja.mako.data.NetworkRepository
+import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.network.NetworkIdentityFactory
 import ninja.mako.network.NetworkMonitor
 
@@ -48,6 +50,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       initialValue = 0
     )
 
+  private val discoveryPlan = networkSnapshots
+    .map { snapshot -> HostCandidatePlanner.buildPlan(snapshot) }
+    .stateIn(
+      scope = viewModelScope,
+      started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
+      initialValue = null
+    )
+
   init {
     viewModelScope.launch {
       var previousNetworkKey: String? = null
@@ -71,9 +81,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   val uiState: StateFlow<MainUiState> = combine(
     networkSnapshots,
     currentNetworkRecord,
-    knownNetworkCount
-  ) { snapshot, record, count ->
-    MainUiState.from(snapshot, record, count)
+    knownNetworkCount,
+    discoveryPlan
+  ) { snapshot, record, count, discoveryPlan ->
+    MainUiState.from(snapshot, record, count, discoveryPlan)
   }
     .stateIn(
       scope = viewModelScope,

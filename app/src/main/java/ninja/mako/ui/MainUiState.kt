@@ -2,6 +2,7 @@ package ninja.mako.ui
 
 import java.text.DateFormat
 import java.util.Date
+import ninja.mako.discovery.HostDiscoveryPlan
 import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.network.NetworkSnapshot
 
@@ -28,7 +29,8 @@ data class MainUiState(
     fun from(
       snapshot: NetworkSnapshot,
       record: NetworkRecordEntity?,
-      knownNetworkCount: Int
+      knownNetworkCount: Int,
+      discoveryPlan: HostDiscoveryPlan?
     ): MainUiState {
       if (!snapshot.connected) return MainUiState()
 
@@ -70,7 +72,17 @@ data class MainUiState(
           domains = snapshot.domains ?: "Unavailable",
           privateDns = snapshot.privateDnsServerName ?: "Off / not advertised",
           validation = validationBits,
-          discoverySummary = "Planned stack: bounded subnet sweep, PTR lookups, mDNS, SSDP, and safe local banner fingerprinting.",
+          discoverySummary = discoveryPlan?.let { plan ->
+            buildString {
+              append("Sweep plan: ${plan.candidateHosts.size} of ${plan.totalUsableHostCount} hosts in ${plan.subnetCidr}.")
+              if (plan.prioritizedHosts.isNotEmpty()) {
+                append(" Priority: ${plan.prioritizedHosts.take(6).joinToString(", ")}")
+                if (plan.prioritizedHosts.size > 6) append(", ...")
+                append(".")
+              }
+              append(if (plan.truncated) " Bounded for civility." else " Full usable host set fits current budget.")
+            }
+          } ?: "Planned stack: bounded subnet sweep, PTR lookups, mDNS, SSDP, and safe local banner fingerprinting.",
           networkMemorySummary = if (record == null) {
             "No persisted network record is attached yet. Known networks stored locally: $knownNetworkCount."
           } else {

@@ -74,6 +74,7 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - First-pass `networkKey` derivation now hashes stable Wi-Fi link inputs from `NetworkIdentityFactory`: transport, subnet CIDR, gateway, sorted DNS set, search domains, and private DNS name
 - Current `networkKey` intentionally excludes ephemeral local host address and still excludes SSID/BSSID until the Android permission posture is documented and validated
 - Network records now persist raw identity inputs alongside the derived key in Room so grouping logic can be revised later without losing the original evidence
+- `HostCandidatePlanner` now derives a bounded IPv4 host plan from the active subnet, prioritizing gateway, in-subnet DNS servers, and neighbors near the local address before filling the rest of the sweep budget
 - Record the exact Android permission posture here once the discovery stack is chosen; SSID/BSSID and multicast discovery may vary by API level
 - Record probe defaults and rate limits here once active fingerprinting exists
 - If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+
