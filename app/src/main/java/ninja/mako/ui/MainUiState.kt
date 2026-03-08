@@ -1,5 +1,8 @@
 package ninja.mako.ui
 
+import java.text.DateFormat
+import java.util.Date
+import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.network.NetworkSnapshot
 
 data class MainUiState(
@@ -22,7 +25,11 @@ data class MainUiState(
   val showWifiWarning: Boolean = true
 ) {
   companion object {
-    fun from(snapshot: NetworkSnapshot): MainUiState {
+    fun from(
+      snapshot: NetworkSnapshot,
+      record: NetworkRecordEntity?,
+      knownNetworkCount: Int
+    ): MainUiState {
       if (!snapshot.connected) return MainUiState()
 
       val validationBits = buildList {
@@ -33,13 +40,25 @@ data class MainUiState(
       }.joinToString(" · ")
 
       return if (snapshot.isWifi) {
+        val knownNetwork = record != null && record.activationCount > 1
+        val firstSeen = record?.firstSeenAt?.let(::formatTimestamp)
+        val lastConnected = record?.lastConnectedAt?.let(::formatTimestamp)
+        val keySuffix = record?.networkKey ?: "pending"
+
         MainUiState(
           eyebrow = "Current water: Wi-Fi",
-          headline = "Wi-Fi transport active",
-          subhead = "MAKO can already see the active link context. The next layer binds device discovery, fingerprints, and timeline memory to this network.",
+          headline = if (knownNetwork) "Known Wi-Fi network active" else "New Wi-Fi network active",
+          subhead = if (record == null) {
+            "MAKO can already see the active link context. The new per-network record is still materializing."
+          } else if (knownNetwork) {
+            "MAKO recognized this network and restored its local network record."
+          } else {
+            "MAKO created a fresh local network record for this Wi-Fi environment."
+          },
           statusBadge = when {
             snapshot.hasCaptivePortal -> "Captive portal"
-            snapshot.isValidated -> "Wi-Fi online"
+            knownNetwork -> "Known Wi-Fi"
+            snapshot.isValidated -> "New Wi-Fi"
             else -> "Wi-Fi connected"
           },
           transport = snapshot.transportLabel,
@@ -52,7 +71,19 @@ data class MainUiState(
           privateDns = snapshot.privateDnsServerName ?: "Off / not advertised",
           validation = validationBits,
           discoverySummary = "Planned stack: bounded subnet sweep, PTR lookups, mDNS, SSDP, and safe local banner fingerprinting.",
-          networkMemorySummary = "This active Wi-Fi link is the future root record for per-network device memory, return visits, and timeline diffs.",
+          networkMemorySummary = if (record == null) {
+            "No persisted network record is attached yet. Known networks stored locally: $knownNetworkCount."
+          } else {
+            buildString {
+              append(if (knownNetwork) "Known network record." else "New network record.")
+              append(" Local count: $knownNetworkCount.")
+              append(" First seen: ${firstSeen ?: "just now"}.")
+              append(" Last connected: ${lastConnected ?: "just now"}.")
+              append(" Sessions: ${record.activationCount}.")
+              append(" Key: $keySuffix.")
+              append(" Basis: ${record.stableInputSummary}.")
+            }
+          },
           wifiWarning = "",
           showWifiWarning = false
         )
@@ -76,6 +107,10 @@ data class MainUiState(
           showWifiWarning = true
         )
       }
+    }
+
+    private fun formatTimestamp(timestamp: Long): String {
+      return DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(Date(timestamp))
     }
   }
 }

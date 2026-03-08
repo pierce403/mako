@@ -11,6 +11,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import java.net.InetAddress
 
 class NetworkMonitor(context: Context) {
   private val connectivityManager =
@@ -51,7 +52,7 @@ class NetworkMonitor(context: Context) {
       transportLabel = describeTransport(capabilities),
       interfaceName = linkProperties?.interfaceName,
       localAddress = bestAddress?.address?.hostAddress,
-      subnet = bestAddress?.let { "${it.address.hostAddress}/${it.prefixLength}" },
+      subnet = bestAddress?.let(::toNetworkCidr),
       gateway = linkProperties
         ?.routes
         ?.firstOrNull { route -> route.gateway != null }
@@ -85,5 +86,23 @@ class NetworkMonitor(context: Context) {
       .filterNot { address -> address.address.isLoopbackAddress || address.address.isLinkLocalAddress }
       .sortedBy { address -> if (address.address.hostAddress?.contains(':') == true) 1 else 0 }
       .firstOrNull()
+  }
+
+  private fun toNetworkCidr(linkAddress: LinkAddress): String {
+    val maskedAddress = linkAddress.address.address.clone()
+    var remainingBits = linkAddress.prefixLength
+
+    maskedAddress.indices.forEach { index ->
+      val mask = when {
+        remainingBits >= 8 -> 0xFF
+        remainingBits <= 0 -> 0x00
+        else -> (0xFF shl (8 - remainingBits)) and 0xFF
+      }
+      maskedAddress[index] = (maskedAddress[index].toInt() and mask).toByte()
+      remainingBits -= 8
+    }
+
+    val networkAddress = InetAddress.getByAddress(maskedAddress).hostAddress
+    return "$networkAddress/${linkAddress.prefixLength}"
   }
 }

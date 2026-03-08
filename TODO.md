@@ -12,7 +12,7 @@
 
 - [ ] Prove the network-discovery stack that is actually feasible on modern Android while connected to Wi-Fi
 - [ ] Define the storage model for networks, devices, observations, fingerprints, and timeline events before building UI-heavy features
-- [ ] Turn the current network-monitor shell into the first real per-network record flow
+- [x] Turn the current network-monitor shell into the first real per-network record flow
 
 ## Product framing
 
@@ -44,9 +44,9 @@
 ## Network identity
 
 - [ ] Enumerate all Android-accessible signals for the current Wi-Fi network: SSID, BSSID, gateway IP, subnet, DNS servers, DHCP domain/search suffixes, captive-portal hints, transport info, Wi-Fi standard, meter state
-- [ ] Define a `networkKey` strategy that can handle same-SSID-different-place collisions
-- [ ] Decide which network fields are treated as stable identifiers versus ephemeral session metadata
-- [ ] Store raw network identity inputs so grouping logic can be revisited later
+- [x] Define a `networkKey` strategy that can handle same-SSID-different-place collisions
+- [x] Decide which network fields are treated as stable identifiers versus ephemeral session metadata
+- [x] Store raw network identity inputs so grouping logic can be revisited later
 - [ ] Decide how to merge or split network records when the router changes but the site is probably the same place
 - [ ] Handle redacted or unavailable SSID/BSSID cases cleanly
 - [ ] Detect network changes promptly and end any in-flight discovery/fingerprinting tied to the old network
@@ -130,7 +130,7 @@
 ## Main UI
 
 - [ ] Build the main screen around the current network summary plus the discovered-device list
-- [ ] Show whether the current network is new or previously known
+- [x] Show whether the current network is new or previously known
 - [ ] Show discovery state, last sweep time, active fingerprinting state, and any notable failures
 - [ ] Add sorting and filtering for live status, hostname, IP, confidence, last seen, and likely device category
 - [ ] Add strong empty states for `not on Wi-Fi`, `new network with no discoveries yet`, and `permissions missing`

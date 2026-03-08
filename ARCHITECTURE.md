@@ -16,6 +16,16 @@
 - `data` owns per-network persistence and timeline derivation
 - `ui` consumes derived state rather than orchestrating protocol work directly
 
+## Current network key strategy
+
+The first-pass `networkKey` is derived from the most stable Wi-Fi link properties currently available without extra identity permissions:
+
+- stable inputs currently in the key: transport, subnet CIDR, gateway, DNS server set, search domains, and private DNS name
+- ephemeral inputs intentionally excluded from the key: local host address and other session-only status fields
+- raw identity inputs are still stored on the persisted network record so the grouping strategy can be revised later
+
+Current limitation: SSID/BSSID are not part of the key yet. They will be reconsidered after the Android permission posture is documented and validated.
+
 ## MVP storage shape
 
 ### Network
