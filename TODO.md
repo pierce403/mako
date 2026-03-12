@@ -133,6 +133,7 @@
 - [x] Rework the landing page so the live local Wi-Fi inventory stays above the fold and includes this phone in the visible device list
 - [x] Move diagnostics and manual rescan controls into a toolbar overflow menu so the inventory list can own the landing screen
 - [x] Add explicit start/stop scan controls plus an opt-in continuous background scan mode from the toolbar menu
+- [x] Add best-effort hostname, vendor, and device-classification enrichment to the live inventory cards
 - [x] Show whether the current network is new or previously known
 - [ ] Show discovery state, last sweep time, active fingerprinting state, and any notable failures
 - [ ] Add sorting and filtering for live status, hostname, IP, confidence, last seen, and likely device category
@@ -141,6 +142,7 @@
 
 ## Device detail UI
 
+- [x] Add a tap-through device detail screen with a full live evidence report for each discovered host
 - [ ] Build a detail screen showing current derived identity, all observed names, reachable addresses, services, and fingerprint evidence
 - [ ] Show what is known versus inferred with explicit evidence labels
 - [ ] Show the device's history within the current network only

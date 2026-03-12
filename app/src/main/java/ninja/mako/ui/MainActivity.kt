@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     filterDrawerBaseTopPadding = binding.filterDrawerContent.paddingTop
     filterDrawerBaseBottomPadding = binding.filterDrawerContent.paddingBottom
 
-    adapter = DeviceAdapter()
+    adapter = DeviceAdapter(::openDeviceDetail)
 
     binding.deviceList.layoutManager = LinearLayoutManager(this)
     binding.deviceList.adapter = adapter
@@ -381,6 +381,10 @@ class MainActivity : AppCompatActivity() {
 
   private fun openDiagnostics() {
     startActivity(DiagnosticsActivity.intent(this, buildDiagnosticsReport()))
+  }
+
+  private fun openDeviceDetail(item: DiscoveredDeviceListItem) {
+    startActivity(DeviceDetailActivity.intent(this, item.detail))
   }
 
   private fun copyDiagnosticsReport() {

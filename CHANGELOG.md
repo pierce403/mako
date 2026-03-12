@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.9
+
+- added live host enrichment on the main inventory: reverse-DNS hostnames, best-effort MAC capture from the neighbor cache, IEEE OUI vendor lookup, and heuristic device classification
+- made device cards tappable and added a full device-detail screen that shows the current evidence report for each observed host
+- shipped the IEEE OUI bundle with the app and documented that MAC/vendor enrichment remains best-effort on Android because neighbor-table visibility is not guaranteed for every peer
+
 ## 0.1.8
 
 - added explicit `Start scan` / `Stop scan` controls to the main overflow menu and fixed manual rescans so they always force a fresh sweep, even when the bounded host slice does not change

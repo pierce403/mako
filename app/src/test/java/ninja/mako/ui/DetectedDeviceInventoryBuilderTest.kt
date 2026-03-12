@@ -4,6 +4,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import ninja.mako.discovery.ClassificationConfidence
+import ninja.mako.discovery.DeviceClassification
+import ninja.mako.discovery.HostEnrichment
 import ninja.mako.discovery.HostProbeOutcome
 import ninja.mako.discovery.HostProbeResult
 import ninja.mako.network.NetworkSnapshot
@@ -31,6 +34,7 @@ class DetectedDeviceInventoryBuilderTest {
     assertEquals("This phone", devices.single().displayTitle)
     assertEquals("192.168.1.44", devices.single().hostAddress)
     assertTrue(devices.single().isLocalDevice)
+    assertTrue(devices.single().detail.report.contains("This is the Android device running MAKO"))
   }
 
   @Test
@@ -67,5 +71,50 @@ class DetectedDeviceInventoryBuilderTest {
     assertEquals("Gateway", gateway.badgeLabel)
     assertEquals("Resolver", resolver.badgeLabel)
     assertFalse(devices.any { device -> device.hostAddress == "192.168.1.20" })
+  }
+
+  @Test
+  fun usesHostEnrichmentForTitlesAndDeviceDetails() {
+    val snapshot = NetworkSnapshot(
+      connected = true,
+      isWifi = true,
+      transportLabel = "Wi-Fi",
+      localAddress = "192.168.1.44"
+    )
+
+    val devices = DetectedDeviceInventoryBuilder.build(
+      snapshot = snapshot,
+      networkKey = "network-1",
+      results = listOf(
+        HostProbeResult(
+          host = "192.168.1.77",
+          outcome = HostProbeOutcome.CONNECTED,
+          port = 445,
+          observedAt = 500L
+        )
+      ),
+      enrichments = mapOf(
+        "192.168.1.77" to HostEnrichment(
+          hostname = "diskstation.office",
+          macAddress = "00:11:22:33:44:55",
+          manufacturer = "Synology",
+          classification = DeviceClassification(
+            label = "NAS / file server",
+            badgeLabel = "NAS",
+            confidence = ClassificationConfidence.HIGH,
+            evidence = listOf("Hostname looks NAS-related.")
+          )
+        )
+      ),
+      now = 1_000L
+    )
+
+    val nas = devices.first { device -> device.hostAddress == "192.168.1.77" }
+    assertEquals("diskstation", nas.displayTitle)
+    assertEquals("NAS", nas.badgeLabel)
+    assertTrue(nas.metaLine.contains("Synology"))
+    assertTrue(nas.statusLine.contains("NAS / file server"))
+    assertTrue(nas.detail.report.contains("Manufacturer: Synology"))
+    assertTrue(nas.detail.report.contains("MAC address: 00:11:22:33:44:55"))
   }
 }

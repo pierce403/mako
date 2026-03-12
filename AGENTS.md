@@ -85,6 +85,9 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - The main overflow menu now owns `Start scan`, `Stop scan`, `Rescan subnet`, and `Continuous scanning`; the foreground scan-enabled state is persisted so notification actions, lifecycle handoff, and the main screen stay in sync
 - Continuous background scanning is now an explicit foreground-service mode with a 30 second cadence; it posts an ongoing notification and may alert on newly seen interesting hosts that are not the phone, gateway, or configured DNS resolvers
 - Current permission posture: manifest includes `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, and `POST_NOTIFICATIONS`; runtime prompting currently only applies to `POST_NOTIFICATIONS` on Android 13+ for user-visible continuous-scan notifications
+- Live inventory cards now support best-effort host enrichment: reverse DNS hostname lookup, neighbor-table MAC capture when Android exposes it, IEEE OUI vendor lookup from a bundled asset, and heuristic category classification
+- Peer MAC and vendor data are not guaranteed on Android; treat them as best-effort hints derived from the local neighbor cache, not ground truth
+- Device cards are now tappable and open a dedicated device-detail screen with the current evidence report for that host
 - Record SSID/BSSID, multicast discovery, and future Android local-network permission posture here as those discovery paths are implemented and validated
 - Record probe defaults and rate limits here once active fingerprinting exists
 - If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+

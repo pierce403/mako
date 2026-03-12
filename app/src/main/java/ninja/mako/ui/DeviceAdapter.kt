@@ -8,14 +8,16 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import ninja.mako.databinding.ItemDeviceBinding
 
-class DeviceAdapter : ListAdapter<DiscoveredDeviceListItem, DeviceAdapter.DeviceViewHolder>(DiffCallback) {
+class DeviceAdapter(
+  private val onDeviceClick: (DiscoveredDeviceListItem) -> Unit = {}
+) : ListAdapter<DiscoveredDeviceListItem, DeviceAdapter.DeviceViewHolder>(DiffCallback) {
   init {
     setHasStableIds(true)
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceViewHolder {
     val binding = ItemDeviceBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-    return DeviceViewHolder(binding)
+    return DeviceViewHolder(binding, onDeviceClick)
   }
 
   override fun getItemId(position: Int): Long {
@@ -27,7 +29,8 @@ class DeviceAdapter : ListAdapter<DiscoveredDeviceListItem, DeviceAdapter.Device
   }
 
   class DeviceViewHolder(
-    private val binding: ItemDeviceBinding
+    private val binding: ItemDeviceBinding,
+    private val onDeviceClick: (DiscoveredDeviceListItem) -> Unit
   ) : RecyclerView.ViewHolder(binding.root) {
     fun bind(item: DiscoveredDeviceListItem) {
       binding.deviceName.text = item.displayTitle
@@ -39,6 +42,9 @@ class DeviceAdapter : ListAdapter<DiscoveredDeviceListItem, DeviceAdapter.Device
       binding.deviceMeta.ellipsize = TextUtils.TruncateAt.END
       binding.deviceHost.text = item.hostAddress
       binding.deviceStatus.text = item.statusLine
+      binding.root.setOnClickListener {
+        onDeviceClick(item)
+      }
     }
   }
 

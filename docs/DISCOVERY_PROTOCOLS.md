@@ -18,7 +18,7 @@ Android's connectivity guide says the `LinkProperties` object contains link info
 
 - Relevant records: PTR, SRV, TXT, plus ordinary A/AAAA lookups
 - Why it matters: reverse lookup and service naming can produce low-cost hostname or service hints without full banner grabbing
-- MVP posture: in scope
+- MVP posture: in scope and first-pass reverse DNS is now implemented as a best-effort enrichment step for responsive hosts
 
 `RFC 1035` defines PTR and TXT resource records. PTR is the basis for reverse name mapping. `RFC 2782` defines SRV records for locating a service endpoint by service, protocol, and domain. `RFC 6763` layers DNS-Based Service Discovery on top of DNS naming conventions and notes that DNS-SD can work over ordinary unicast DNS as well as multicast DNS.
 
@@ -29,6 +29,12 @@ Practical implication for `MAKO`: unicast DNS is appropriate for:
 - low-cost follow-up queries after a host is already known
 
 Practical implication for `MAKO`: unicast DNS is not evidence of device identity by itself. DNS data can be stale, shared, or centrally managed.
+
+Current shipped posture:
+
+- `MAKO` now performs best-effort reverse DNS for responsive IPv4 hosts after they are observed in the bounded TCP sweep
+- current hostname enrichment uses the platform resolver path and is intentionally treated as hint-level evidence in the UI
+- negative or missing reverse DNS results do not remove a host from inventory and are shown as unavailable rather than as proof that no hostname exists
 
 ### mDNS / DNS-SD
 
@@ -99,6 +105,18 @@ Practical implication for `MAKO`:
 - do not rely on `InetAddress.isReachable()` as the core host-sweep primitive
 - prefer explicit TCP connect probes to a bounded set of known ports
 - classify results as timeout, refused, reachable-on-port, or responded-with-banner rather than "host exists" vs "host absent"
+
+### Neighbor cache and OUI lookup
+
+- Primitive: best-effort reads from the local ARP / neighbor cache plus offline IEEE OUI lookup
+- Why it matters: if Android exposes a peer MAC address at all, the prefix can provide a manufacturer hint that improves device classification and detail screens
+- MVP posture: in scope and first-pass support is now implemented
+
+Practical implication for `MAKO`:
+
+- MAC visibility is not guaranteed on modern Android, so this path is a hint source rather than a required part of discovery
+- manufacturer names are only shown when both the peer MAC is visible and the prefix exists in the bundled IEEE OUI table
+- UI copy should keep vendor and category labels clearly separated from observed reachability facts
 
 ## Android-specific constraints
 

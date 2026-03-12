@@ -215,6 +215,7 @@ data class MainUiState(
         append("\nTCP sweep ports: 53, 80, 443, 445, 631.")
         append("\nTCP sweep concurrency: 12 hosts.")
         append("\nTCP connect timeout: 250 ms.")
+        append("\nHost enrichment: reverse DNS, best-effort neighbor-table MAC capture, IEEE OUI vendor lookup, and heuristic device classification.")
         append("\nManual rescan forces an immediate new sweep, even when the bounded host slice is unchanged.")
       }
 

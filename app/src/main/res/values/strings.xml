@@ -56,6 +56,8 @@
   <string name="diagnostics">Diagnostics</string>
   <string name="open_diagnostics">Diagnostics</string>
   <string name="copy_diagnostics_report">Copy diagnostics report</string>
+  <string name="copy_device_detail_report">Copy device detail</string>
+  <string name="device_detail_copied">Device detail copied.</string>
   <string name="diagnostics_copied">Diagnostics report copied.</string>
   <string name="diagnostics_warning">Local-only diagnostics. This report clearly includes sensitive values such as local IPs, gateway IPs, DNS servers, and discovered host addresses.</string>
   <string name="continuous_scan_notification_title">MAKO continuous scan</string>

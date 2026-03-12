@@ -24,6 +24,8 @@ import kotlinx.coroutines.withContext
 import ninja.mako.data.NetworkRepository
 import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.discovery.HostDiscoveryPlan
+import ninja.mako.discovery.HostEnrichment
+import ninja.mako.discovery.HostEnrichmentResolver
 import ninja.mako.discovery.HostProbeOutcome
 import ninja.mako.discovery.HostProbeResult
 import ninja.mako.discovery.ScanPreferences
@@ -43,10 +45,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   private val networkMonitor = NetworkMonitor(application.applicationContext)
   private val repository = NetworkRepository(application.applicationContext)
   private val hostSweepRunner = TcpHostSweepRunner()
+  private val hostEnrichmentResolver = HostEnrichmentResolver(application.applicationContext)
   private val currentNetworkKey = MutableStateFlow<String?>(null)
   private val sweepCycle = MutableStateFlow(0)
   private val sweepSession = MutableStateFlow<HostSweepSession?>(null)
   private val inventoryResults = MutableStateFlow<List<HostProbeResult>>(emptyList())
+  private val hostEnrichments = MutableStateFlow<Map<String, HostEnrichment>>(emptyMap())
   private val scanEnabledState = MutableStateFlow(
     ScanPreferences.isEnabled(application.applicationContext)
   )
@@ -58,6 +62,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   private val webInterfacesOnly = MutableStateFlow(false)
   private var sweepJob: Job? = null
   private var activeSweepSignature: String? = null
+  private val enrichmentJobs = linkedMapOf<String, Job>()
 
   private val networkSnapshots = networkMonitor
     .snapshots()
@@ -117,6 +122,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
           currentNetworkKey.value = null
           sweepCycle.value = 0
           inventoryResults.value = emptyList()
+          clearHostEnrichments()
           previousNetworkKey = null
           return@collect
         }
@@ -125,6 +131,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (isActivation) {
           sweepCycle.value = 0
           inventoryResults.value = emptyList()
+          clearHostEnrichments()
         }
         repository.persistSnapshot(identity, snapshot, isActivation)
         currentNetworkKey.value = identity.networkKey
@@ -206,11 +213,63 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
       }
     }
+
+    viewModelScope.launch {
+      var previousNetworkKey: String? = null
+
+      combine(networkSnapshots, currentNetworkKey, inventoryResults) { snapshot, networkKey, results ->
+        EnrichmentInputs(
+          snapshot = snapshot,
+          networkKey = networkKey,
+          results = results
+        )
+      }.collect { inputs ->
+        if (inputs.networkKey != previousNetworkKey) {
+          clearHostEnrichments()
+          previousNetworkKey = inputs.networkKey
+        }
+
+        if (inputs.networkKey == null || !inputs.snapshot.connected || !inputs.snapshot.isWifi) {
+          clearHostEnrichments()
+          return@collect
+        }
+
+        val activeHosts = inputs.results.map { it.host }.toSet()
+        hostEnrichments.value = hostEnrichments.value.filterKeys { host -> host in activeHosts }
+
+        val staleHosts = enrichmentJobs.keys.filter { host -> host !in activeHosts }
+        staleHosts.forEach { host ->
+          enrichmentJobs.remove(host)?.cancel()
+        }
+
+        inputs.results.forEach { result ->
+          if (hostEnrichments.value.containsKey(result.host) || enrichmentJobs.containsKey(result.host)) {
+            return@forEach
+          }
+
+          val stableNetworkKey = inputs.networkKey
+          val stableSnapshot = inputs.snapshot
+          enrichmentJobs[result.host] = viewModelScope.launch {
+            val enrichment = withContext(Dispatchers.IO) {
+              hostEnrichmentResolver.resolve(stableSnapshot, result)
+            }
+            enrichmentJobs.remove(result.host)
+            if (currentNetworkKey.value != stableNetworkKey) return@launch
+            hostEnrichments.value = hostEnrichments.value + (result.host to enrichment)
+          }
+        }
+      }
+    }
   }
 
-  private val detectedDevices = combine(networkSnapshots, currentNetworkKey, inventoryResults) { snapshot, networkKey, results ->
+  private val detectedDevices = combine(
+    networkSnapshots,
+    currentNetworkKey,
+    inventoryResults,
+    hostEnrichments
+  ) { snapshot, networkKey, results, enrichments ->
     withContext(Dispatchers.Default) {
-      DetectedDeviceInventoryBuilder.build(snapshot, networkKey, results)
+      DetectedDeviceInventoryBuilder.build(snapshot, networkKey, results, enrichments)
     }
   }
     .conflate()
@@ -409,6 +468,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     activeSweepSignature = null
   }
 
+  private fun clearHostEnrichments() {
+    enrichmentJobs.values.forEach { job -> job.cancel() }
+    enrichmentJobs.clear()
+    hostEnrichments.value = emptyMap()
+  }
+
   private fun buildSweepSignature(networkKey: String, plan: HostDiscoveryPlan, sweepCycle: Int): String {
     return buildString {
       append(networkKey)
@@ -488,5 +553,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val scanEnabled: Boolean,
     val foregroundActive: Boolean,
     val sweepCycle: Int
+  )
+
+  private data class EnrichmentInputs(
+    val snapshot: NetworkSnapshot,
+    val networkKey: String?,
+    val results: List<HostProbeResult>
   )
 }

@@ -60,6 +60,8 @@ The app shell now leads with the live local Wi-Fi inventory list, backed by the 
 
 There is also an explicit continuous-scanning mode in the same overflow menu. When enabled, `MAKO` hands discovery off to a foreground service as the app backgrounds, keeps scanning the current Wi-Fi network on a fixed cadence, and can alert when new interesting hosts appear. On Android 13 and newer, the app now requests `POST_NOTIFICATIONS` when that mode is enabled so the ongoing scan notification and new-device alerts stay visible.
 
+The live inventory now does a first-pass enrichment step after hosts appear: best-effort reverse DNS for hostnames, best-effort MAC extraction from the local neighbor cache, IEEE OUI vendor lookup from a bundled registry, and heuristic classification into categories like router, printer, NAS, camera, light, desktop, or phone. Device cards are now tappable and open a full detail screen with the current evidence report for that host.
+
 Current architecture direction: stay operationally similar to `unagi`, but use a more modular network/discovery/data pipeline instead of mirroring the Bluetooth-specific internals directly.
 
 ## Build

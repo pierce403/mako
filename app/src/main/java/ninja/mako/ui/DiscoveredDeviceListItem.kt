@@ -7,6 +7,7 @@ data class DiscoveredDeviceListItem(
   val badgeLabel: String,
   val metaLine: String,
   val statusLine: String,
+  val detail: DiscoveredDeviceDetail,
   val searchText: String,
   val sortTimestamp: Long,
   val lastSeen: Long,

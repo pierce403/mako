@@ -71,6 +71,8 @@ Current shipped `MAKO` behavior:
 - runtime prompt today: `POST_NOTIFICATIONS` on Android 13+ when the user enables continuous scanning
 - no runtime request is currently made for SSID/BSSID access because `MAKO` is not yet collecting them
 - multicast is not yet actively used, so `CHANGE_WIFI_MULTICAST_STATE` is present for future mDNS/SSDP work but does not currently trigger any user-facing flow
+- peer MAC visibility is best-effort only: current host enrichment tries the local neighbor cache (`/proc/net/arp`) and may return nothing for many peers or Android builds
+- vendor naming is derived locally from a bundled IEEE OUI table only when a peer MAC address is actually visible
 
 ## Multicast lock posture
 
