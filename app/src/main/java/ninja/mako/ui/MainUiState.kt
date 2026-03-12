@@ -4,6 +4,7 @@ import java.text.DateFormat
 import java.util.Date
 import ninja.mako.BuildConfig
 import ninja.mako.data.NetworkRecordEntity
+import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.discovery.HostDiscoveryPlan
 import ninja.mako.discovery.HostSweepSession
 import ninja.mako.discovery.HostSweepStatus
@@ -37,12 +38,13 @@ data class MainUiState(
       record: NetworkRecordEntity?,
       knownNetworkCount: Int,
       discoveryPlan: HostDiscoveryPlan?,
-      sweepSession: HostSweepSession?
+      sweepSession: HostSweepSession?,
+      inventoryDeviceCount: Int
     ): MainUiState {
       if (!snapshot.connected) {
         return MainUiState(
           sweepStatus = sweepSession?.status,
-          totalDetectedDevices = sweepSession?.reachableHosts ?: 0,
+          totalDetectedDevices = inventoryDeviceCount,
           diagnosticsReport = buildDiagnosticsReport(
             snapshot = snapshot,
             record = record,
@@ -63,7 +65,6 @@ data class MainUiState(
       return if (snapshot.isWifi) {
         val knownNetwork = record != null && record.activationCount > 1
         val firstSeen = record?.firstSeenAt?.let(::formatTimestamp)
-        val localInventoryCount = (sweepSession?.reachableHosts ?: 0) + if (snapshot.localAddress != null) 1 else 0
 
         MainUiState(
           eyebrow = "Current water: Wi-Fi",
@@ -82,7 +83,7 @@ data class MainUiState(
             else -> "Wi-Fi connected"
           },
           sweepStatus = sweepSession?.status,
-          totalDetectedDevices = localInventoryCount,
+          totalDetectedDevices = inventoryDeviceCount,
           transport = snapshot.transportLabel,
           interfaceName = snapshot.interfaceName ?: "Unavailable",
           localAddress = snapshot.localAddress ?: "Unavailable",
@@ -94,10 +95,10 @@ data class MainUiState(
           validation = validationBits,
           discoverySummary = when {
             sweepSession != null && sweepSession.status == HostSweepStatus.RUNNING -> {
-              "Sweep running on ${sweepSession.subnetCidr}: ${sweepSession.hostsAttempted}/${sweepSession.hostsPlanned} hosts checked, ${sweepSession.reachableHosts} responsive, ${sweepSession.openServiceHosts} with open services."
+              "Sweep running on ${sweepSession.subnetCidr}: ${sweepSession.hostsAttempted}/${sweepSession.hostsPlanned} hosts checked, ${sweepSession.reachableHosts} responsive so far."
             }
             sweepSession != null && sweepSession.status == HostSweepStatus.COMPLETED -> {
-              "Last sweep on ${sweepSession.subnetCidr}: ${sweepSession.reachableHosts} responsive hosts, ${sweepSession.openServiceHosts} with open services."
+              "Last sweep on ${sweepSession.subnetCidr}: ${sweepSession.reachableHosts} responsive hosts. Use Rescan from the menu to continue deeper on larger subnets."
             }
             sweepSession != null && sweepSession.status == HostSweepStatus.CANCELLED -> {
               "The last sweep stopped because the active network changed."
@@ -109,6 +110,7 @@ data class MainUiState(
               buildString {
                 append("Planned sweep: ${discoveryPlan.candidateHosts.size} hosts on ${discoveryPlan.subnetCidr}.")
                 append(" Prioritizing the gateway, resolvers, and nearby addresses.")
+                append(" Rescan advances to the next bounded slice.")
                 append(if (discoveryPlan.truncated) " Bounded for civility." else " All usable hosts fit the current budget.")
               }
             }
@@ -141,7 +143,7 @@ data class MainUiState(
           subhead = "The current transport is ${snapshot.transportLabel}. Connect to Wi-Fi to inventory local devices.",
           statusBadge = "${snapshot.transportLabel} only",
           sweepStatus = sweepSession?.status,
-          totalDetectedDevices = sweepSession?.reachableHosts ?: 0,
+          totalDetectedDevices = inventoryDeviceCount,
           transport = snapshot.transportLabel,
           interfaceName = snapshot.interfaceName ?: "Unavailable",
           localAddress = snapshot.localAddress ?: "Unavailable",
@@ -181,10 +183,11 @@ data class MainUiState(
         "Current app permissions: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE. SSID/BSSID collection is not enabled yet."
 
       val settingsState = buildString {
-        append("Host plan budget: 64 hosts.")
+        append("Host plan budget: ${HostCandidatePlanner.DEFAULT_MAX_HOSTS} hosts.")
         append("\nTCP sweep ports: 53, 80, 443, 445, 631.")
         append("\nTCP sweep concurrency: 12 hosts.")
         append("\nTCP connect timeout: 250 ms.")
+        append("\nManual rescan advances to the next bounded host slice on larger subnets.")
       }
 
       return buildString {

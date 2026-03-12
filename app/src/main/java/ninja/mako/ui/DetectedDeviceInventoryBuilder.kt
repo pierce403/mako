@@ -2,14 +2,13 @@ package ninja.mako.ui
 
 import ninja.mako.discovery.HostProbeOutcome
 import ninja.mako.discovery.HostProbeResult
-import ninja.mako.discovery.HostSweepSession
 import ninja.mako.network.NetworkSnapshot
 
 object DetectedDeviceInventoryBuilder {
   fun build(
     snapshot: NetworkSnapshot,
     networkKey: String?,
-    session: HostSweepSession?,
+    results: List<HostProbeResult>,
     now: Long = System.currentTimeMillis()
   ): List<DiscoveredDeviceListItem> {
     val inventory = linkedMapOf<String, DiscoveredDeviceListItem>()
@@ -18,15 +17,14 @@ object DetectedDeviceInventoryBuilder {
       inventory[localDevice.deviceKey] = localDevice
     }
 
-    val stableNetworkKey = session?.networkKey ?: networkKey ?: "active-network"
-    session
-      ?.results
-      ?.asReversed()
-      ?.asSequence()
-      ?.filter(::isResponsive)
-      ?.filterNot { result -> result.host == snapshot.localAddress }
-      ?.map { result -> buildObservedDevice(snapshot, stableNetworkKey, result, now) }
-      ?.forEach { device ->
+    val stableNetworkKey = networkKey ?: "active-network"
+    results
+      .asReversed()
+      .asSequence()
+      .filter(::isResponsive)
+      .filterNot { result -> result.host == snapshot.localAddress }
+      .map { result -> buildObservedDevice(snapshot, stableNetworkKey, result, now) }
+      .forEach { device ->
         inventory.putIfAbsent(device.deviceKey, device)
       }
 

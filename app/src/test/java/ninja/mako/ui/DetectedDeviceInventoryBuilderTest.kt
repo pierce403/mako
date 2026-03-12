@@ -6,8 +6,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import ninja.mako.discovery.HostProbeOutcome
 import ninja.mako.discovery.HostProbeResult
-import ninja.mako.discovery.HostSweepSession
-import ninja.mako.discovery.HostSweepStatus
 import ninja.mako.network.NetworkSnapshot
 
 class DetectedDeviceInventoryBuilderTest {
@@ -25,7 +23,7 @@ class DetectedDeviceInventoryBuilderTest {
     val devices = DetectedDeviceInventoryBuilder.build(
       snapshot = snapshot,
       networkKey = "network-1",
-      session = null,
+      results = emptyList(),
       now = 1_000L
     )
 
@@ -45,31 +43,16 @@ class DetectedDeviceInventoryBuilderTest {
       gateway = "192.168.1.1",
       dnsServers = listOf("192.168.1.53")
     )
-    val session = HostSweepSession(
+    val devices = DetectedDeviceInventoryBuilder.build(
+      snapshot = snapshot,
       networkKey = "network-1",
-      subnetCidr = "192.168.1.0/24",
-      status = HostSweepStatus.COMPLETED,
-      startedAt = 0L,
-      endedAt = 500L,
-      hostsPlanned = 4,
-      hostsAttempted = 4,
-      reachableHosts = 3,
-      openServiceHosts = 2,
-      portsProbed = listOf(53, 80, 443, 445, 631),
-      sampleReachableHosts = emptyList(),
       results = listOf(
         HostProbeResult(host = "192.168.1.10", outcome = HostProbeOutcome.CONNECTED, port = 80, observedAt = 100L),
         HostProbeResult(host = "192.168.1.10", outcome = HostProbeOutcome.REFUSED, port = 445, observedAt = 200L),
         HostProbeResult(host = "192.168.1.1", outcome = HostProbeOutcome.CONNECTED, port = 443, observedAt = 300L),
         HostProbeResult(host = "192.168.1.53", outcome = HostProbeOutcome.REFUSED, port = 53, observedAt = 400L),
         HostProbeResult(host = "192.168.1.20", outcome = HostProbeOutcome.TIMEOUT, port = 80, observedAt = 450L)
-      )
-    )
-
-    val devices = DetectedDeviceInventoryBuilder.build(
-      snapshot = snapshot,
-      networkKey = "network-1",
-      session = session,
+      ),
       now = 1_000L
     )
 

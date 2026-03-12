@@ -24,6 +24,8 @@ import kotlinx.coroutines.withContext
 import ninja.mako.data.NetworkRepository
 import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.discovery.HostDiscoveryPlan
+import ninja.mako.discovery.HostProbeOutcome
+import ninja.mako.discovery.HostProbeResult
 import ninja.mako.discovery.HostSweepSession
 import ninja.mako.discovery.HostSweepStatus
 import ninja.mako.discovery.TcpHostSweepRunner
@@ -37,7 +39,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   private val repository = NetworkRepository(application.applicationContext)
   private val hostSweepRunner = TcpHostSweepRunner()
   private val currentNetworkKey = MutableStateFlow<String?>(null)
+  private val sweepCycle = MutableStateFlow(0)
   private val sweepSession = MutableStateFlow<HostSweepSession?>(null)
+  private val inventoryResults = MutableStateFlow<List<HostProbeResult>>(emptyList())
   private val filterQuery = MutableStateFlow("")
   private val sortMode = MutableStateFlow(DeviceSortMode.RECENT)
   private val openServiceOnly = MutableStateFlow(false)
@@ -72,8 +76,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       initialValue = 0
     )
 
-  private val discoveryPlan = networkSnapshots
-    .map { snapshot -> HostCandidatePlanner.buildPlan(snapshot) }
+  private val discoveryPlan = combine(networkSnapshots, sweepCycle) { snapshot, cycle ->
+    HostCandidatePlanner.buildPlan(snapshot, scanCycle = cycle)
+  }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
@@ -101,11 +106,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val identity = NetworkIdentityFactory.fromSnapshot(snapshot)
         if (identity == null) {
           currentNetworkKey.value = null
+          sweepCycle.value = 0
+          inventoryResults.value = emptyList()
           previousNetworkKey = null
           return@collect
         }
 
         val isActivation = previousNetworkKey != identity.networkKey
+        if (isActivation) {
+          sweepCycle.value = 0
+          inventoryResults.value = emptyList()
+        }
         repository.persistSnapshot(identity, snapshot, isActivation)
         currentNetworkKey.value = identity.networkKey
         previousNetworkKey = identity.networkKey
@@ -137,6 +148,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
           try {
             sweepSession.value = hostSweepRunner.run(stableNetworkKey, stablePlan) { progress ->
               sweepSession.value = progress
+              inventoryResults.value = mergeResponsiveResults(inventoryResults.value, progress.results)
             }
           } catch (cancelled: kotlinx.coroutines.CancellationException) {
             sweepSession.value = sweepSession.value?.copy(
@@ -155,9 +167,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
   }
 
-  private val detectedDevices = combine(networkSnapshots, currentNetworkKey, sweepSession) { snapshot, networkKey, session ->
+  private val detectedDevices = combine(networkSnapshots, currentNetworkKey, inventoryResults) { snapshot, networkKey, results ->
     withContext(Dispatchers.Default) {
-      DetectedDeviceInventoryBuilder.build(snapshot, networkKey, session)
+      DetectedDeviceInventoryBuilder.build(snapshot, networkKey, results)
     }
   }
     .conflate()
@@ -256,8 +268,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     discoveryPlan,
     sweepSession
   ) { snapshot, record, count, activeDiscoveryPlan, activeSweepSession ->
-    MainUiState.from(snapshot, record, count, activeDiscoveryPlan, activeSweepSession)
+    UiStateInputs(
+      snapshot = snapshot,
+      record = record,
+      knownNetworkCount = count,
+      discoveryPlan = activeDiscoveryPlan,
+      sweepSession = activeSweepSession
+    )
   }
+    .combine(detectedDevices) { inputs, devices ->
+      MainUiState.from(
+        snapshot = inputs.snapshot,
+        record = inputs.record,
+        knownNetworkCount = inputs.knownNetworkCount,
+        discoveryPlan = inputs.discoveryPlan,
+        sweepSession = inputs.sweepSession,
+        inventoryDeviceCount = devices.size
+      )
+    }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
@@ -282,6 +310,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
   fun setWebInterfacesOnly(enabled: Boolean) {
     webInterfacesOnly.value = enabled
+  }
+
+  fun rescanDiscovery() {
+    if (currentNetworkKey.value != null) {
+      sweepCycle.value = sweepCycle.value + 1
+    }
   }
 
   private suspend fun cancelSweep() {
@@ -319,6 +353,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     return if (count == 1) "device" else "devices"
   }
 
+  private fun mergeResponsiveResults(
+    existing: List<HostProbeResult>,
+    results: List<HostProbeResult>
+  ): List<HostProbeResult> {
+    if (results.isEmpty()) return existing
+
+    val merged = existing.associateByTo(linkedMapOf()) { it.host }
+    results
+      .asSequence()
+      .filter(::isResponsive)
+      .forEach { result ->
+        val previous = merged[result.host]
+        if (previous == null || result.observedAt >= previous.observedAt) {
+          merged[result.host] = result
+        }
+      }
+
+    return merged.values.sortedBy { it.observedAt }
+  }
+
+  private fun isResponsive(result: HostProbeResult): Boolean {
+    return result.outcome == HostProbeOutcome.CONNECTED || result.outcome == HostProbeOutcome.REFUSED
+  }
+
   private object LiveHostWindow {
     const val WINDOW_MS = 120_000L
     const val TICK_MS = 5_000L
@@ -327,4 +385,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       return now - lastSeen <= WINDOW_MS
     }
   }
+
+  private data class UiStateInputs(
+    val snapshot: NetworkSnapshot,
+    val record: ninja.mako.data.NetworkRecordEntity?,
+    val knownNetworkCount: Int,
+    val discoveryPlan: HostDiscoveryPlan?,
+    val sweepSession: HostSweepSession?
+  )
 }

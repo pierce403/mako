@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7
+
+- rebuilt the landing screen around a full-height local device list with a compact status strip instead of a large summary card
+- moved diagnostics actions into a toolbar overflow menu and added a manual subnet rescan action there
+- changed rescans to advance across additional bounded host slices and keep discovered devices accumulated on the current network instead of replacing the list each sweep
+
 ## 0.1.6
 
 - reworked the main landing screen so the live local Wi-Fi device inventory stays primary instead of being pushed down by remembered-network chrome

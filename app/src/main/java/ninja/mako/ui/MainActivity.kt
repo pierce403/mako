@@ -1,7 +1,13 @@
 package ninja.mako.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.os.Bundle
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -29,6 +35,7 @@ class MainActivity : AppCompatActivity() {
   private var filterDrawerBaseTopPadding = 0
   private var filterDrawerBaseBottomPadding = 0
   private var latestDiagnosticsReport = ""
+  private var latestListSummary = ""
   private var latestUiState = MainUiState()
   private var latestVisibleDeviceCount = 0
 
@@ -39,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
     setSupportActionBar(binding.toolbar)
     supportActionBar?.title = getString(R.string.app_name_header)
-    supportActionBar?.subtitle = getString(R.string.app_subtitle)
+    supportActionBar?.subtitle = getString(R.string.device_list_summary_default)
     binding.toolbar.setNavigationIcon(R.drawable.ic_filter_list)
     binding.toolbar.navigationContentDescription = getString(R.string.open_filters)
     binding.toolbar.setNavigationOnClickListener {
@@ -102,9 +109,6 @@ class MainActivity : AppCompatActivity() {
     binding.webInterfacesOnly.setOnCheckedChangeListener { _, isChecked ->
       viewModel.setWebInterfacesOnly(isChecked)
     }
-    binding.openDiagnosticsButton.setOnClickListener {
-      startActivity(DiagnosticsActivity.intent(this, latestDiagnosticsReport))
-    }
 
     lifecycleScope.launch {
       repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -124,28 +128,64 @@ class MainActivity : AppCompatActivity() {
         }
         launch {
           viewModel.deviceListSummary.collect { summary ->
-            binding.listSummary.text = summary
+            latestListSummary = summary
+            updateToolbarSubtitle()
           }
         }
       }
     }
   }
 
+  override fun onCreateOptionsMenu(menu: Menu): Boolean {
+    menuInflater.inflate(R.menu.main_menu, menu)
+    return true
+  }
+
+  override fun onPrepareOptionsMenu(menu: Menu): Boolean {
+    menu.findItem(R.id.menu_rescan)?.apply {
+      isEnabled = !latestUiState.showWifiWarning
+      title = getString(
+        if (latestUiState.sweepStatus == HostSweepStatus.RUNNING) {
+          R.string.menu_restart_scan
+        } else {
+          R.string.menu_rescan
+        }
+      )
+    }
+    return super.onPrepareOptionsMenu(menu)
+  }
+
+  override fun onOptionsItemSelected(item: MenuItem): Boolean {
+    return when (item.itemId) {
+      R.id.menu_rescan -> {
+        viewModel.rescanDiscovery()
+        Toast.makeText(this, R.string.rescan_requested, Toast.LENGTH_SHORT).show()
+        true
+      }
+      R.id.menu_diagnostics -> {
+        openDiagnostics()
+        true
+      }
+      R.id.menu_copy_diagnostics -> {
+        copyDiagnosticsReport()
+        true
+      }
+      else -> super.onOptionsItemSelected(item)
+    }
+  }
+
   private fun render(state: MainUiState) {
     latestUiState = state
-    binding.eyebrow.text = state.eyebrow
-    binding.headline.text = state.headline
-    binding.subhead.text = state.subhead
     binding.statusBadge.text = state.statusBadge
-    binding.drawerStatus.text = state.statusBadge
+    binding.drawerStatus.text = buildDrawerStatus(state)
     binding.networkScopeSummary.text = buildNetworkScopeSummary(state)
     binding.discoverySummary.text = state.discoverySummary
-    binding.networkMemorySummary.text = state.networkMemorySummary
-    binding.devicesSectionSubtitle.text = buildDevicesSectionSubtitle(state)
     latestDiagnosticsReport = state.diagnosticsReport
 
     binding.wifiWarning.isVisible = state.showWifiWarning
     binding.wifiWarning.text = state.wifiWarning
+    updateToolbarSubtitle()
+    invalidateOptionsMenu()
     updateEmptyState()
   }
 
@@ -170,8 +210,8 @@ class MainActivity : AppCompatActivity() {
 
   private fun buildNetworkScopeSummary(state: MainUiState): String {
     return buildList {
+      add(if (state.showWifiWarning) state.headline else state.transport)
       state.localAddress.takeUnless { it == "Unavailable" }?.let { localAddress -> add("Local $localAddress") }
-      add(state.transport)
       state.subnet.takeUnless { it == "Unavailable" }?.let(::add)
       state.gateway.takeUnless { it == "Unavailable" }?.let { gateway -> add("Gateway $gateway") }
       if (state.validation.isNotBlank() && state.validation != "No active validation state") {
@@ -180,11 +220,14 @@ class MainActivity : AppCompatActivity() {
     }.joinToString("  •  ")
   }
 
-  private fun buildDevicesSectionSubtitle(state: MainUiState): String {
+  private fun buildDrawerStatus(state: MainUiState): String {
     return when {
-      state.showWifiWarning -> getString(R.string.devices_section_subtitle_offline)
-      state.sweepStatus == HostSweepStatus.RUNNING -> getString(R.string.devices_section_subtitle_scanning)
-      else -> getString(R.string.devices_section_subtitle_live)
+      state.showWifiWarning -> getString(R.string.status_offline)
+      state.sweepStatus == HostSweepStatus.RUNNING -> getString(R.string.drawer_status_running)
+      state.sweepStatus == HostSweepStatus.COMPLETED -> getString(R.string.drawer_status_complete)
+      state.sweepStatus == HostSweepStatus.FAILED -> getString(R.string.drawer_status_failed)
+      state.sweepStatus == HostSweepStatus.CANCELLED -> getString(R.string.drawer_status_cancelled)
+      else -> state.statusBadge
     }
   }
 
@@ -201,6 +244,25 @@ class MainActivity : AppCompatActivity() {
 
     binding.emptyState.isVisible = latestVisibleDeviceCount == 0
     binding.emptyState.text = message
+  }
+
+  private fun updateToolbarSubtitle() {
+    supportActionBar?.subtitle =
+      if (latestUiState.showWifiWarning) {
+        latestUiState.wifiWarning
+      } else {
+        latestListSummary.ifBlank { getString(R.string.device_list_summary_default) }
+      }
+  }
+
+  private fun openDiagnostics() {
+    startActivity(DiagnosticsActivity.intent(this, latestDiagnosticsReport))
+  }
+
+  private fun copyDiagnosticsReport() {
+    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("MAKO diagnostics", latestDiagnosticsReport))
+    Toast.makeText(this, R.string.diagnostics_copied, Toast.LENGTH_SHORT).show()
   }
 
   private fun toggleFiltersDrawer() {

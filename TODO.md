@@ -131,6 +131,7 @@
 
 - [x] Build the main screen around the current network summary plus the discovered-device list
 - [x] Rework the landing page so the live local Wi-Fi inventory stays above the fold and includes this phone in the visible device list
+- [x] Move diagnostics and manual rescan controls into a toolbar overflow menu so the inventory list can own the landing screen
 - [x] Show whether the current network is new or previously known
 - [ ] Show discovery state, last sweep time, active fingerprinting state, and any notable failures
 - [ ] Add sorting and filtering for live status, hostname, IP, confidence, last seen, and likely device category

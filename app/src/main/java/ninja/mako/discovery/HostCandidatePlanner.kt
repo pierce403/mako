@@ -7,9 +7,13 @@ import kotlin.math.min
 import ninja.mako.network.NetworkSnapshot
 
 object HostCandidatePlanner {
-  private const val DEFAULT_MAX_HOSTS = 64
+  const val DEFAULT_MAX_HOSTS = 96
 
-  fun buildPlan(snapshot: NetworkSnapshot, maxHosts: Int = DEFAULT_MAX_HOSTS): HostDiscoveryPlan? {
+  fun buildPlan(
+    snapshot: NetworkSnapshot,
+    scanCycle: Int = 0,
+    maxHosts: Int = DEFAULT_MAX_HOSTS
+  ): HostDiscoveryPlan? {
     if (!snapshot.connected || !snapshot.isWifi) return null
 
     val subnet = parseIpv4Cidr(snapshot.subnet ?: return null) ?: return null
@@ -39,13 +43,21 @@ object HostCandidatePlanner {
       .take(maxHosts)
       .forEach(finalHosts::add)
 
-    if (finalHosts.size < maxHosts) {
-      usableHosts
+    val remainingBudget = maxHosts - finalHosts.size
+    if (remainingBudget > 0) {
+      val remainingHosts = usableHosts
         .asSequence()
         .filterNot { address -> address == localAddress }
         .filterNot(finalHosts::contains)
-        .take(maxHosts - finalHosts.size)
-        .forEach(finalHosts::add)
+        .toList()
+
+      if (remainingHosts.isNotEmpty()) {
+        val windowSize = min(remainingBudget, remainingHosts.size)
+        val offset = ((scanCycle.coerceAtLeast(0)) * windowSize) % remainingHosts.size
+        repeat(windowSize) { index ->
+          finalHosts += remainingHosts[(offset + index) % remainingHosts.size]
+        }
+      }
     }
 
     if (finalHosts.isEmpty()) return null

@@ -81,6 +81,7 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - `DiagnosticsActivity` now accepts an explicit local-only report payload from `MainActivity`, exposes a copy-to-clipboard action, and labels that the exported text contains sensitive local-network values
 - The main screen now follows the `unagi` interaction pattern more closely: a left filter drawer, a compact network summary card, and a RecyclerView-backed detected-device list
 - The main screen now leads with the live local Wi-Fi device inventory, keeps current-network context in a tighter summary card, and includes this phone in the visible device list
+- The main screen now follows `unagi` more closely: a compact status strip, a toolbar overflow menu for diagnostics/rescan actions, and a full-height device list; manual rescans advance across additional bounded subnet slices and accumulate responsive hosts for the current network
 - Record the exact Android permission posture here once the discovery stack is chosen; SSID/BSSID and multicast discovery may vary by API level
 - Record probe defaults and rate limits here once active fingerprinting exists
 - If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+
