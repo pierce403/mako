@@ -132,6 +132,7 @@
 - [x] Build the main screen around the current network summary plus the discovered-device list
 - [x] Rework the landing page so the live local Wi-Fi inventory stays above the fold and includes this phone in the visible device list
 - [x] Move diagnostics and manual rescan controls into a toolbar overflow menu so the inventory list can own the landing screen
+- [x] Add explicit start/stop scan controls plus an opt-in continuous background scan mode from the toolbar menu
 - [x] Show whether the current network is new or previously known
 - [ ] Show discovery state, last sweep time, active fingerprinting state, and any notable failures
 - [ ] Add sorting and filtering for live status, hostname, IP, confidence, last seen, and likely device category
@@ -171,8 +172,8 @@
 - [ ] Confirm any multicast lock requirements for mDNS and SSDP
 - [ ] Handle Android 10 through Android 15 behavior differences
 - [ ] Handle `Wi-Fi off`, `not connected`, `captive portal`, `VPN active`, `Private DNS active`, and `metered network` states cleanly
-- [ ] Decide whether long-running discovery needs a foreground service
-- [ ] If background behavior exists at all, keep it explicit and platform-friendly
+- [x] Decide whether long-running discovery needs a foreground service
+- [x] If background behavior exists at all, keep it explicit and platform-friendly
 
 ## Performance and civility
 

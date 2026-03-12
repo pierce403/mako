@@ -56,12 +56,21 @@ What we know now:
 - reading connectivity state with `NetworkCallback` does not by itself require a permission
 - LAN traffic itself is the area that will be permission-gated on newer Android releases
 - multicast receive paths require careful use of `WifiManager.MulticastLock`
+- continuous background scanning on current Android releases is practical via a foreground service, not via a hidden/background worker
 
 What this means for the project:
 
 - passive network-fact capture can stay on the connectivity stack
 - broad discovery and active fingerprinting need an explicit permission strategy for Android 16/17+
 - picker-mediated mDNS discovery may become the fallback or privacy-preserving mode on future Android versions
+- current runtime prompting should stay narrow: `POST_NOTIFICATIONS` on Android 13+ for visible continuous-scan notifications and device alerts
+
+Current shipped `MAKO` behavior:
+
+- manifest permissions: `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, `POST_NOTIFICATIONS`
+- runtime prompt today: `POST_NOTIFICATIONS` on Android 13+ when the user enables continuous scanning
+- no runtime request is currently made for SSID/BSSID access because `MAKO` is not yet collecting them
+- multicast is not yet actively used, so `CHANGE_WIFI_MULTICAST_STATE` is present for future mDNS/SSDP work but does not currently trigger any user-facing flow
 
 ## Multicast lock posture
 

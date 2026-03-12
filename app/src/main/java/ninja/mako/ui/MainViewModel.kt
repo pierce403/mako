@@ -26,6 +26,7 @@ import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.discovery.HostDiscoveryPlan
 import ninja.mako.discovery.HostProbeOutcome
 import ninja.mako.discovery.HostProbeResult
+import ninja.mako.discovery.ScanPreferences
 import ninja.mako.discovery.HostSweepSession
 import ninja.mako.discovery.HostSweepStatus
 import ninja.mako.discovery.TcpHostSweepRunner
@@ -35,6 +36,10 @@ import ninja.mako.network.NetworkSnapshot
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+  companion object {
+    private const val AUTO_RESCAN_DELAY_MS = 30_000L
+  }
+
   private val networkMonitor = NetworkMonitor(application.applicationContext)
   private val repository = NetworkRepository(application.applicationContext)
   private val hostSweepRunner = TcpHostSweepRunner()
@@ -42,6 +47,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   private val sweepCycle = MutableStateFlow(0)
   private val sweepSession = MutableStateFlow<HostSweepSession?>(null)
   private val inventoryResults = MutableStateFlow<List<HostProbeResult>>(emptyList())
+  private val scanEnabledState = MutableStateFlow(
+    ScanPreferences.isEnabled(application.applicationContext)
+  )
+  private val foregroundActive = MutableStateFlow(true)
   private val filterQuery = MutableStateFlow("")
   private val sortMode = MutableStateFlow(DeviceSortMode.RECENT)
   private val openServiceOnly = MutableStateFlow(false)
@@ -124,18 +133,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     viewModelScope.launch {
-      combine(currentNetworkKey, discoveryPlan) { networkKey, plan ->
-        networkKey to plan
-      }.collect { (networkKey, plan) ->
-        val stableNetworkKey = networkKey
-        val stablePlan = plan
+      combine(
+        currentNetworkKey,
+        discoveryPlan,
+        scanEnabledState,
+        foregroundActive,
+        sweepCycle
+      ) { networkKey, plan, scanEnabled, isForeground, cycle ->
+        SweepInputs(
+          networkKey = networkKey,
+          discoveryPlan = plan,
+          scanEnabled = scanEnabled,
+          foregroundActive = isForeground,
+          sweepCycle = cycle
+        )
+      }.collect { inputs ->
+        val stableNetworkKey = inputs.networkKey
+        val stablePlan = inputs.discoveryPlan
         val signature =
-          if (stableNetworkKey == null || stablePlan == null) null
-          else buildSweepSignature(stableNetworkKey, stablePlan)
+          if (!inputs.scanEnabled || !inputs.foregroundActive || stableNetworkKey == null || stablePlan == null) {
+            null
+          } else {
+            buildSweepSignature(stableNetworkKey, stablePlan, inputs.sweepCycle)
+          }
 
         if (signature == null) {
           cancelSweep()
-          sweepSession.value = null
+          if (stableNetworkKey == null || stablePlan == null) {
+            sweepSession.value = null
+          }
           return@collect
         }
 
@@ -146,9 +172,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         sweepSession.value = HostSweepSession.running(stableNetworkKey!!, stablePlan!!, hostSweepRunner.ports())
         sweepJob = viewModelScope.launch {
           try {
-            sweepSession.value = hostSweepRunner.run(stableNetworkKey, stablePlan) { progress ->
+            val completedSession = hostSweepRunner.run(stableNetworkKey, stablePlan) { progress ->
               sweepSession.value = progress
               inventoryResults.value = mergeResponsiveResults(inventoryResults.value, progress.results)
+            }
+            sweepSession.value = completedSession
+            if (
+              scanEnabledState.value &&
+              foregroundActive.value &&
+              currentNetworkKey.value == stableNetworkKey
+            ) {
+              delay(AUTO_RESCAN_DELAY_MS)
+              if (
+                scanEnabledState.value &&
+                foregroundActive.value &&
+                currentNetworkKey.value == stableNetworkKey
+              ) {
+                sweepCycle.value = sweepCycle.value + 1
+              }
             }
           } catch (cancelled: kotlinx.coroutines.CancellationException) {
             sweepSession.value = sweepSession.value?.copy(
@@ -178,6 +219,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
       initialValue = emptyList()
     )
+
+  val scanEnabled: StateFlow<Boolean> = scanEnabledState
 
   val devices: StateFlow<List<DiscoveredDeviceListItem>> = combine(
     detectedDevices,
@@ -242,17 +285,38 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       initialValue = DeviceFilterState()
     )
 
-  val deviceListSummary: StateFlow<String> = combine(detectedDevices, devices, liveTicker) { rawDevices, visibleDevices, now ->
+  val deviceListSummary: StateFlow<String> = combine(
+    detectedDevices,
+    devices,
+    liveTicker,
+    scanEnabledState
+  ) { rawDevices, visibleDevices, now, scanEnabled ->
     when {
+      rawDevices.isEmpty() && !scanEnabled -> "Discovery paused."
       rawDevices.isEmpty() -> "No local Wi-Fi devices in inventory yet."
-      visibleDevices.isEmpty() -> "No hosts match the current filters."
+      visibleDevices.isEmpty() -> {
+        if (scanEnabled) {
+          "No hosts match the current filters."
+        } else {
+          "No hosts match the current filters. Scan paused."
+        }
+      }
       visibleDevices.size == rawDevices.size -> {
         val liveCount = rawDevices.count { device ->
           device.isLocalDevice || LiveHostWindow.isLive(device.lastSeen, now)
         }
-        "${rawDevices.size} ${deviceLabel(rawDevices.size)} in local inventory • $liveCount active now"
+        val trailingStatus =
+          if (scanEnabled) {
+            "$liveCount active now"
+          } else {
+            "scan paused"
+          }
+        "${rawDevices.size} ${deviceLabel(rawDevices.size)} in local inventory • $trailingStatus"
       }
-      else -> "Showing ${visibleDevices.size} of ${rawDevices.size} ${deviceLabel(rawDevices.size)}"
+      else -> {
+        val base = "Showing ${visibleDevices.size} of ${rawDevices.size} ${deviceLabel(rawDevices.size)}"
+        if (scanEnabled) base else "$base • scan paused"
+      }
     }
   }
     .stateIn(
@@ -273,9 +337,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       record = record,
       knownNetworkCount = count,
       discoveryPlan = activeDiscoveryPlan,
-      sweepSession = activeSweepSession
+      sweepSession = activeSweepSession,
+      scanEnabled = true
     )
   }
+    .combine(scanEnabledState) { inputs, scanEnabled ->
+      inputs.copy(scanEnabled = scanEnabled)
+    }
     .combine(detectedDevices) { inputs, devices ->
       MainUiState.from(
         snapshot = inputs.snapshot,
@@ -283,6 +351,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         knownNetworkCount = inputs.knownNetworkCount,
         discoveryPlan = inputs.discoveryPlan,
         sweepSession = inputs.sweepSession,
+        scanEnabled = inputs.scanEnabled,
         inventoryDeviceCount = devices.size
       )
     }
@@ -312,8 +381,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     webInterfacesOnly.value = enabled
   }
 
+  fun startScan() {
+    ScanPreferences.setEnabled(getApplication(), true)
+    scanEnabledState.value = true
+  }
+
+  fun stopScan() {
+    ScanPreferences.setEnabled(getApplication(), false)
+    scanEnabledState.value = false
+  }
+
+  fun setForegroundActive(active: Boolean) {
+    foregroundActive.value = active
+  }
+
   fun rescanDiscovery() {
     if (currentNetworkKey.value != null) {
+      ScanPreferences.setEnabled(getApplication(), true)
+      scanEnabledState.value = true
       sweepCycle.value = sweepCycle.value + 1
     }
   }
@@ -324,9 +409,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     activeSweepSignature = null
   }
 
-  private fun buildSweepSignature(networkKey: String, plan: HostDiscoveryPlan): String {
+  private fun buildSweepSignature(networkKey: String, plan: HostDiscoveryPlan, sweepCycle: Int): String {
     return buildString {
       append(networkKey)
+      append("|")
+      append(sweepCycle)
       append("|")
       append(plan.subnetCidr)
       append("|")
@@ -391,6 +478,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val record: ninja.mako.data.NetworkRecordEntity?,
     val knownNetworkCount: Int,
     val discoveryPlan: HostDiscoveryPlan?,
-    val sweepSession: HostSweepSession?
+    val sweepSession: HostSweepSession?,
+    val scanEnabled: Boolean
+  )
+
+  private data class SweepInputs(
+    val networkKey: String?,
+    val discoveryPlan: HostDiscoveryPlan?,
+    val scanEnabled: Boolean,
+    val foregroundActive: Boolean,
+    val sweepCycle: Int
   )
 }

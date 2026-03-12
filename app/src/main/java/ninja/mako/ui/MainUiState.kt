@@ -15,6 +15,7 @@ data class MainUiState(
   val headline: String = "Wi-Fi inventory unavailable",
   val subhead: String = "Connect to Wi-Fi to start local device discovery and per-network memory.",
   val statusBadge: String = "Offline",
+  val scanEnabled: Boolean = true,
   val sweepStatus: HostSweepStatus? = null,
   val totalDetectedDevices: Int = 0,
   val transport: String = "Unavailable",
@@ -39,10 +40,12 @@ data class MainUiState(
       knownNetworkCount: Int,
       discoveryPlan: HostDiscoveryPlan?,
       sweepSession: HostSweepSession?,
+      scanEnabled: Boolean,
       inventoryDeviceCount: Int
     ): MainUiState {
       if (!snapshot.connected) {
         return MainUiState(
+          scanEnabled = scanEnabled,
           sweepStatus = sweepSession?.status,
           totalDetectedDevices = inventoryDeviceCount,
           diagnosticsReport = buildDiagnosticsReport(
@@ -50,7 +53,8 @@ data class MainUiState(
             record = record,
             knownNetworkCount = knownNetworkCount,
             discoveryPlan = discoveryPlan,
-            sweepSession = sweepSession
+            sweepSession = sweepSession,
+            scanEnabled = scanEnabled
           )
         )
       }
@@ -77,11 +81,13 @@ data class MainUiState(
             "Started a fresh local inventory for this Wi-Fi network."
           },
           statusBadge = when {
+            !scanEnabled -> "Scan paused"
             snapshot.hasCaptivePortal -> "Captive portal"
             knownNetwork -> "Known Wi-Fi"
             snapshot.isValidated -> "New Wi-Fi"
             else -> "Wi-Fi connected"
           },
+          scanEnabled = scanEnabled,
           sweepStatus = sweepSession?.status,
           totalDetectedDevices = inventoryDeviceCount,
           transport = snapshot.transportLabel,
@@ -94,11 +100,12 @@ data class MainUiState(
           privateDns = snapshot.privateDnsServerName ?: "Off / not advertised",
           validation = validationBits,
           discoverySummary = when {
+            !scanEnabled -> pausedDiscoverySummary(discoveryPlan, sweepSession)
             sweepSession != null && sweepSession.status == HostSweepStatus.RUNNING -> {
               "Sweep running on ${sweepSession.subnetCidr}: ${sweepSession.hostsAttempted}/${sweepSession.hostsPlanned} hosts checked, ${sweepSession.reachableHosts} responsive so far."
             }
             sweepSession != null && sweepSession.status == HostSweepStatus.COMPLETED -> {
-              "Last sweep on ${sweepSession.subnetCidr}: ${sweepSession.reachableHosts} responsive hosts. Use Rescan from the menu to continue deeper on larger subnets."
+              "Last sweep on ${sweepSession.subnetCidr}: ${sweepSession.reachableHosts} responsive hosts. Use Rescan for another pass or Stop scan to pause."
             }
             sweepSession != null && sweepSession.status == HostSweepStatus.CANCELLED -> {
               "The last sweep stopped because the active network changed."
@@ -131,7 +138,8 @@ data class MainUiState(
             record = record,
             knownNetworkCount = knownNetworkCount,
             discoveryPlan = discoveryPlan,
-            sweepSession = sweepSession
+            sweepSession = sweepSession,
+            scanEnabled = scanEnabled
           ),
           wifiWarning = "",
           showWifiWarning = false
@@ -142,6 +150,7 @@ data class MainUiState(
           headline = "Wi-Fi inventory unavailable",
           subhead = "The current transport is ${snapshot.transportLabel}. Connect to Wi-Fi to inventory local devices.",
           statusBadge = "${snapshot.transportLabel} only",
+          scanEnabled = scanEnabled,
           sweepStatus = sweepSession?.status,
           totalDetectedDevices = inventoryDeviceCount,
           transport = snapshot.transportLabel,
@@ -160,11 +169,27 @@ data class MainUiState(
             record = record,
             knownNetworkCount = knownNetworkCount,
             discoveryPlan = discoveryPlan,
-            sweepSession = sweepSession
+            sweepSession = sweepSession,
+            scanEnabled = scanEnabled
           ),
           wifiWarning = "MAKO is intentionally idle for local-network discovery until the device is on Wi-Fi.",
           showWifiWarning = true
         )
+      }
+    }
+
+    private fun pausedDiscoverySummary(
+      discoveryPlan: HostDiscoveryPlan?,
+      sweepSession: HostSweepSession?
+    ): String {
+      return when {
+        sweepSession != null && sweepSession.status == HostSweepStatus.COMPLETED -> {
+          "Discovery paused after the last sweep on ${sweepSession.subnetCidr}. Use Start scan from the menu to resume."
+        }
+        discoveryPlan != null -> {
+          "Discovery paused. Planned sweep: ${discoveryPlan.candidateHosts.size} hosts on ${discoveryPlan.subnetCidr}. Use Start scan from the menu to resume."
+        }
+        else -> "Discovery paused. Use Start scan from the menu once MAKO can plan the next local Wi-Fi sweep."
       }
     }
 
@@ -177,17 +202,20 @@ data class MainUiState(
       record: NetworkRecordEntity?,
       knownNetworkCount: Int,
       discoveryPlan: HostDiscoveryPlan?,
-      sweepSession: HostSweepSession?
+      sweepSession: HostSweepSession?,
+      scanEnabled: Boolean
     ): String {
       val permissionState =
-        "Current app permissions: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE. SSID/BSSID collection is not enabled yet."
+        "Current app permissions: INTERNET, ACCESS_NETWORK_STATE, ACCESS_WIFI_STATE, CHANGE_WIFI_MULTICAST_STATE, FOREGROUND_SERVICE, FOREGROUND_SERVICE_DATA_SYNC, and POST_NOTIFICATIONS on Android 13+ for user-visible continuous-scan alerts. SSID/BSSID collection is not enabled yet."
 
       val settingsState = buildString {
-        append("Host plan budget: ${HostCandidatePlanner.DEFAULT_MAX_HOSTS} hosts.")
+        append("Foreground scan enabled: $scanEnabled.")
+        append("\nContinuous background scanning: explicit overflow-menu toggle backed by a foreground service.")
+        append("\nHost plan budget: ${HostCandidatePlanner.DEFAULT_MAX_HOSTS} hosts.")
         append("\nTCP sweep ports: 53, 80, 443, 445, 631.")
         append("\nTCP sweep concurrency: 12 hosts.")
         append("\nTCP connect timeout: 250 ms.")
-        append("\nManual rescan advances to the next bounded host slice on larger subnets.")
+        append("\nManual rescan forces an immediate new sweep, even when the bounded host slice is unchanged.")
       }
 
       return buildString {

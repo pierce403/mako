@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8
+
+- added explicit `Start scan` / `Stop scan` controls to the main overflow menu and fixed manual rescans so they always force a fresh sweep, even when the bounded host slice does not change
+- added an opt-in continuous background scan mode backed by a foreground service, with ongoing status notifications and alerts for newly seen interesting hosts
+- added runtime notification permission prompting for Android 13+ when continuous scanning is enabled and kept scan-enabled state persisted across the app, menu, and background notification action
+
 ## 0.1.7
 
 - rebuilt the landing screen around a full-height local device list with a compact status strip instead of a large summary card

@@ -82,7 +82,10 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - The main screen now follows the `unagi` interaction pattern more closely: a left filter drawer, a compact network summary card, and a RecyclerView-backed detected-device list
 - The main screen now leads with the live local Wi-Fi device inventory, keeps current-network context in a tighter summary card, and includes this phone in the visible device list
 - The main screen now follows `unagi` more closely: a compact status strip, a toolbar overflow menu for diagnostics/rescan actions, and a full-height device list; manual rescans advance across additional bounded subnet slices and accumulate responsive hosts for the current network
-- Record the exact Android permission posture here once the discovery stack is chosen; SSID/BSSID and multicast discovery may vary by API level
+- The main overflow menu now owns `Start scan`, `Stop scan`, `Rescan subnet`, and `Continuous scanning`; the foreground scan-enabled state is persisted so notification actions, lifecycle handoff, and the main screen stay in sync
+- Continuous background scanning is now an explicit foreground-service mode with a 30 second cadence; it posts an ongoing notification and may alert on newly seen interesting hosts that are not the phone, gateway, or configured DNS resolvers
+- Current permission posture: manifest includes `INTERNET`, `ACCESS_NETWORK_STATE`, `ACCESS_WIFI_STATE`, `CHANGE_WIFI_MULTICAST_STATE`, `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_DATA_SYNC`, and `POST_NOTIFICATIONS`; runtime prompting currently only applies to `POST_NOTIFICATIONS` on Android 13+ for user-visible continuous-scan notifications
+- Record SSID/BSSID, multicast discovery, and future Android local-network permission posture here as those discovery paths are implemented and validated
 - Record probe defaults and rate limits here once active fingerprinting exists
 - If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+
 - When shipping user-visible APK changes, bump `versionCode` and `versionName` and keep the installed version visible somewhere obvious such as Diagnostics/about

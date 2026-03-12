@@ -9,14 +9,24 @@
   <string name="open_filters">Open filters</string>
   <string name="filters_panel_title">Filters</string>
   <string name="filters_panel_subtitle">Refine the current local Wi-Fi inventory the same way UNAGI lets you work the room.</string>
+  <string name="menu_start_scan">Start scan</string>
+  <string name="menu_stop_scan">Stop scan</string>
   <string name="menu_rescan">Rescan subnet</string>
   <string name="menu_restart_scan">Restart sweep</string>
+  <string name="continuous_scanning">Continuous scanning</string>
   <string name="menu_copy_diagnostics">Copy diagnostics</string>
   <string name="rescan_requested">Rescan requested.</string>
+  <string name="scan_started">Scan started.</string>
+  <string name="scan_stopped">Scan stopped.</string>
+  <string name="continuous_scanning_enabled">Continuous scanning enabled.</string>
+  <string name="continuous_scanning_disabled">Continuous scanning disabled.</string>
+  <string name="notifications_enabled">Notifications enabled for continuous scanning.</string>
+  <string name="notifications_denied">Continuous scanning stays enabled, but alerts may stay hidden until notifications are allowed.</string>
   <string name="drawer_status_running">Sweep running</string>
   <string name="drawer_status_complete">Sweep complete</string>
   <string name="drawer_status_failed">Sweep failed</string>
   <string name="drawer_status_cancelled">Sweep cancelled</string>
+  <string name="drawer_status_paused">Sweep paused</string>
   <string name="filter_hint">Filter by IP, role, or service</string>
   <string name="sort_label">Sort</string>
   <string name="open_service_only">Open services only</string>
@@ -27,6 +37,7 @@
   <string name="empty_state_wifi_required">Connect to Wi-Fi to start local discovery.</string>
   <string name="empty_state_scanning">Scanning this subnet now. Responsive devices will appear here as MAKO finds them.</string>
   <string name="empty_state_filters">No local devices match the current filters.</string>
+  <string name="empty_state_scan_paused">Discovery is paused. Use Start scan from the menu to resume local sweeps.</string>
   <string name="empty_state_failed">The last sweep failed before MAKO could build a device list.</string>
   <string name="empty_state_cancelled">Discovery stopped because the active network changed.</string>
   <string name="empty_state_no_devices">Sweep complete, but nothing on the current subnet answered yet.</string>
@@ -47,4 +58,13 @@
   <string name="copy_diagnostics_report">Copy diagnostics report</string>
   <string name="diagnostics_copied">Diagnostics report copied.</string>
   <string name="diagnostics_warning">Local-only diagnostics. This report clearly includes sensitive values such as local IPs, gateway IPs, DNS servers, and discovered host addresses.</string>
+  <string name="continuous_scan_notification_title">MAKO continuous scan</string>
+  <string name="continuous_scan_waiting">Waiting for local Wi-Fi context</string>
+  <string name="continuous_scan_active">Scanning %1$d hosts on %2$s</string>
+  <string name="continuous_scan_last_result">Last sweep found %1$d responsive hosts on %2$s</string>
+  <string name="notification_action_stop_scanning">Stop</string>
+  <string name="new_device_alert_title_single">New interesting device</string>
+  <string name="new_device_alert_title_multiple">%1$d new interesting devices</string>
+  <string name="new_device_alert_body_single">%1$s appeared on %2$s</string>
+  <string name="new_device_alert_body_multiple">New hosts: %1$s</string>
 </resources>

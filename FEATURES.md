@@ -13,7 +13,7 @@
 
 - black-and-red shark presentation instead of `unagi` blue ninja styling
 - the landing screen should immediately show the live local Wi-Fi device list, not bury it under secondary network history chrome
-- diagnostics and rescan controls should live in a toolbar overflow menu so the landing canvas stays focused on the device inventory
+- diagnostics, scan controls, and continuous-scanning mode should live in a toolbar overflow menu so the landing canvas stays focused on the device inventory
 - clear distinction between observed facts and inferred classifications
 - explicit indicators for discovery and active fingerprinting
 - strong empty and unsupported states
@@ -32,4 +32,4 @@
 - per-device watch rules or alerts
 - exportable diagnostics
 - richer per-protocol fingerprint modules
-- background-safe discovery modes
+- richer background-safe discovery modes

@@ -1,13 +1,17 @@
 package ninja.mako.ui
 
+import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
@@ -17,6 +21,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
 import androidx.core.view.updatePadding
 import androidx.core.widget.doAfterTextChanged
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -24,9 +29,23 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
 import ninja.mako.R
 import ninja.mako.databinding.ActivityMainBinding
+import ninja.mako.discovery.ContinuousScanPreferences
+import ninja.mako.discovery.ContinuousScanService
 import ninja.mako.discovery.HostSweepStatus
 
 class MainActivity : AppCompatActivity() {
+  private val notificationPermissionLauncher = registerForActivityResult(
+    ActivityResultContracts.RequestPermission()
+  ) { granted ->
+    if (!pendingNotificationPermissionFlow) return@registerForActivityResult
+    pendingNotificationPermissionFlow = false
+    Toast.makeText(
+      this,
+      if (granted) R.string.notifications_enabled else R.string.notifications_denied,
+      Toast.LENGTH_SHORT
+    ).show()
+  }
+
   private lateinit var binding: ActivityMainBinding
   private val viewModel: MainViewModel by viewModels()
   private lateinit var adapter: DeviceAdapter
@@ -37,10 +56,14 @@ class MainActivity : AppCompatActivity() {
   private var latestDiagnosticsReport = ""
   private var latestListSummary = ""
   private var latestUiState = MainUiState()
+  private var latestScanEnabled = true
   private var latestVisibleDeviceCount = 0
+  private var continuousScanningEnabled = false
+  private var pendingNotificationPermissionFlow = false
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    continuousScanningEnabled = ContinuousScanPreferences.isEnabled(this)
     binding = ActivityMainBinding.inflate(layoutInflater)
     setContentView(binding.root)
 
@@ -132,34 +155,63 @@ class MainActivity : AppCompatActivity() {
             updateToolbarSubtitle()
           }
         }
+        launch {
+          viewModel.scanEnabled.collect { enabled ->
+            latestScanEnabled = enabled
+            invalidateOptionsMenu()
+            updateEmptyState()
+          }
+        }
       }
     }
   }
 
+  override fun onStart() {
+    super.onStart()
+    continuousScanningEnabled = ContinuousScanPreferences.isEnabled(this)
+    viewModel.setForegroundActive(true)
+    ContinuousScanService.stop(this)
+    invalidateOptionsMenu()
+  }
+
+  override fun onStop() {
+    viewModel.setForegroundActive(false)
+    if (!isChangingConfigurations && continuousScanningEnabled && latestScanEnabled) {
+      ContinuousScanService.start(this)
+    }
+    super.onStop()
+  }
+
   override fun onCreateOptionsMenu(menu: Menu): Boolean {
     menuInflater.inflate(R.menu.main_menu, menu)
+    syncMenuState(menu)
     return true
   }
 
   override fun onPrepareOptionsMenu(menu: Menu): Boolean {
-    menu.findItem(R.id.menu_rescan)?.apply {
-      isEnabled = !latestUiState.showWifiWarning
-      title = getString(
-        if (latestUiState.sweepStatus == HostSweepStatus.RUNNING) {
-          R.string.menu_restart_scan
-        } else {
-          R.string.menu_rescan
-        }
-      )
-    }
+    syncMenuState(menu)
     return super.onPrepareOptionsMenu(menu)
   }
 
   override fun onOptionsItemSelected(item: MenuItem): Boolean {
     return when (item.itemId) {
+      R.id.menu_scan_toggle -> {
+        if (latestScanEnabled) {
+          stopCurrentScan()
+        } else {
+          startCurrentScan()
+        }
+        true
+      }
       R.id.menu_rescan -> {
         viewModel.rescanDiscovery()
         Toast.makeText(this, R.string.rescan_requested, Toast.LENGTH_SHORT).show()
+        true
+      }
+      R.id.menu_continuous_scanning -> {
+        val enabled = !item.isChecked
+        item.isChecked = enabled
+        setContinuousScanningEnabled(enabled)
         true
       }
       R.id.menu_diagnostics -> {
@@ -176,6 +228,7 @@ class MainActivity : AppCompatActivity() {
 
   private fun render(state: MainUiState) {
     latestUiState = state
+    latestScanEnabled = state.scanEnabled
     binding.statusBadge.text = state.statusBadge
     binding.drawerStatus.text = buildDrawerStatus(state)
     binding.networkScopeSummary.text = buildNetworkScopeSummary(state)
@@ -223,6 +276,7 @@ class MainActivity : AppCompatActivity() {
   private fun buildDrawerStatus(state: MainUiState): String {
     return when {
       state.showWifiWarning -> getString(R.string.status_offline)
+      !state.scanEnabled -> getString(R.string.drawer_status_paused)
       state.sweepStatus == HostSweepStatus.RUNNING -> getString(R.string.drawer_status_running)
       state.sweepStatus == HostSweepStatus.COMPLETED -> getString(R.string.drawer_status_complete)
       state.sweepStatus == HostSweepStatus.FAILED -> getString(R.string.drawer_status_failed)
@@ -236,6 +290,7 @@ class MainActivity : AppCompatActivity() {
       latestUiState.showWifiWarning -> getString(R.string.empty_state_wifi_required)
       latestVisibleDeviceCount > 0 -> ""
       latestUiState.totalDetectedDevices > 0 -> getString(R.string.empty_state_filters)
+      !latestUiState.scanEnabled -> getString(R.string.empty_state_scan_paused)
       latestUiState.sweepStatus == HostSweepStatus.RUNNING -> getString(R.string.empty_state_scanning)
       latestUiState.sweepStatus == HostSweepStatus.FAILED -> getString(R.string.empty_state_failed)
       latestUiState.sweepStatus == HostSweepStatus.CANCELLED -> getString(R.string.empty_state_cancelled)
@@ -255,13 +310,82 @@ class MainActivity : AppCompatActivity() {
       }
   }
 
+  private fun syncMenuState(menu: Menu) {
+    menu.findItem(R.id.menu_scan_toggle)?.apply {
+      title = getString(
+        if (latestScanEnabled) {
+          R.string.menu_stop_scan
+        } else {
+          R.string.menu_start_scan
+        }
+      )
+      isEnabled = !latestUiState.showWifiWarning
+    }
+    menu.findItem(R.id.menu_rescan)?.apply {
+      isEnabled = !latestUiState.showWifiWarning
+      title = getString(
+        if (latestUiState.sweepStatus == HostSweepStatus.RUNNING) {
+          R.string.menu_restart_scan
+        } else {
+          R.string.menu_rescan
+        }
+      )
+    }
+    menu.findItem(R.id.menu_continuous_scanning)?.isChecked = continuousScanningEnabled
+  }
+
+  private fun startCurrentScan() {
+    viewModel.startScan()
+    Toast.makeText(this, R.string.scan_started, Toast.LENGTH_SHORT).show()
+  }
+
+  private fun stopCurrentScan() {
+    viewModel.stopScan()
+    ContinuousScanService.stop(this)
+    Toast.makeText(this, R.string.scan_stopped, Toast.LENGTH_SHORT).show()
+  }
+
+  private fun setContinuousScanningEnabled(enabled: Boolean) {
+    if (continuousScanningEnabled == enabled) return
+
+    continuousScanningEnabled = enabled
+    ContinuousScanPreferences.setEnabled(this, enabled)
+    if (!enabled) {
+      ContinuousScanService.stop(this)
+    } else {
+      maybeRequestNotificationPermissionForContinuousScan()
+    }
+
+    Toast.makeText(
+      this,
+      if (enabled) R.string.continuous_scanning_enabled else R.string.continuous_scanning_disabled,
+      Toast.LENGTH_SHORT
+    ).show()
+    invalidateOptionsMenu()
+  }
+
+  private fun maybeRequestNotificationPermissionForContinuousScan() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+    if (
+      ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) == PackageManager.PERMISSION_GRANTED
+    ) {
+      return
+    }
+
+    pendingNotificationPermissionFlow = true
+    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+  }
+
   private fun openDiagnostics() {
-    startActivity(DiagnosticsActivity.intent(this, latestDiagnosticsReport))
+    startActivity(DiagnosticsActivity.intent(this, buildDiagnosticsReport()))
   }
 
   private fun copyDiagnosticsReport() {
     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboard.setPrimaryClip(ClipData.newPlainText("MAKO diagnostics", latestDiagnosticsReport))
+    clipboard.setPrimaryClip(ClipData.newPlainText("MAKO diagnostics", buildDiagnosticsReport()))
     Toast.makeText(this, R.string.diagnostics_copied, Toast.LENGTH_SHORT).show()
   }
 
@@ -270,6 +394,29 @@ class MainActivity : AppCompatActivity() {
       binding.drawerLayout.closeDrawer(GravityCompat.START)
     } else {
       binding.drawerLayout.openDrawer(GravityCompat.START)
+    }
+  }
+
+  private fun buildDiagnosticsReport(): String {
+    return buildString {
+      append(latestDiagnosticsReport.trimEnd())
+      appendLine()
+      appendLine()
+      appendLine("Main screen")
+      appendLine("Foreground scan enabled: $latestScanEnabled")
+      appendLine("Continuous scanning enabled: $continuousScanningEnabled")
+      appendLine("Notification permission: ${notificationPermissionState()}")
+    }.trimEnd()
+  }
+
+  private fun notificationPermissionState(): String {
+    return when {
+      Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU -> "Not required on this Android version"
+      ContextCompat.checkSelfPermission(
+        this,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) == PackageManager.PERMISSION_GRANTED -> "Granted"
+      else -> "Not granted"
     }
   }
 }
