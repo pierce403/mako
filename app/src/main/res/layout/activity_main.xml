@@ -43,7 +43,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:cardBackgroundColor="@color/mako_surface_variant"
-        app:cardCornerRadius="24dp"
+        app:cardCornerRadius="20dp"
         app:strokeColor="@color/mako_stroke"
         app:strokeWidth="1dp">
 
@@ -51,7 +51,7 @@
           android:layout_width="match_parent"
           android:layout_height="wrap_content"
           android:orientation="vertical"
-          android:padding="18dp">
+          android:padding="16dp">
 
           <TextView
             android:id="@+id/eyebrow"
@@ -81,7 +81,7 @@
               android:layout_weight="1"
               android:text="@string/headline_default"
               android:textColor="@color/mako_on_surface"
-              android:textSize="28sp"
+              android:textSize="24sp"
               android:textStyle="bold" />
 
             <TextView
@@ -104,7 +104,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:ellipsize="end"
             android:lineSpacingExtra="4dp"
+            android:maxLines="2"
             android:text="@string/subhead_default"
             android:textColor="@color/mako_on_background"
             android:textSize="15sp" />
@@ -113,16 +115,9 @@
             android:id="@+id/networkScopeSummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="14dp"
-            android:textColor="@color/mako_secondary"
-            android:textStyle="bold" />
-
-          <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/discovery_runway_title"
-            android:textAllCaps="true"
+            android:layout_marginTop="12dp"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:textColor="@color/mako_secondary"
             android:textStyle="bold" />
 
@@ -130,26 +125,21 @@
             android:id="@+id/discoverySummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:lineSpacingExtra="4dp"
+            android:layout_marginTop="12dp"
+            android:ellipsize="end"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
             android:text="@string/discovery_summary_default"
             android:textColor="@color/mako_on_background" />
-
-          <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/network_memory_title"
-            android:textAllCaps="true"
-            android:textColor="@color/mako_secondary"
-            android:textStyle="bold" />
 
           <TextView
             android:id="@+id/networkMemorySummary"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:lineSpacingExtra="4dp"
+            android:layout_marginTop="10dp"
+            android:ellipsize="end"
+            android:lineSpacingExtra="2dp"
+            android:maxLines="2"
             android:text="@string/network_memory_summary_default"
             android:textColor="@color/mako_on_background" />
 
@@ -158,14 +148,14 @@
             style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="14dp"
             android:text="@string/open_diagnostics" />
 
           <TextView
             android:id="@+id/wifiWarning"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:background="@drawable/panel_surface_subtle"
             android:padding="16dp"
             android:text="@string/wifi_required_warning"
@@ -178,47 +168,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:orientation="vertical">
-
-        <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:text="@string/network_list_title"
-          android:textColor="@color/mako_on_surface"
-          android:textSize="18sp"
-          android:textStyle="bold" />
-
-        <TextView
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginTop="6dp"
-          android:text="@string/network_list_subtitle"
-          android:textColor="@color/mako_on_background" />
-      </LinearLayout>
-
-      <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/networkList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:clipToPadding="false"
-        android:paddingEnd="8dp" />
-
-      <TextView
-        android:id="@+id/networkListEmpty"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/panel_surface_subtle"
-        android:padding="16dp"
-        android:text="@string/network_list_empty"
-        android:textColor="@color/mako_on_background"
-        android:visibility="gone" />
-
-      <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="18dp"
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
@@ -258,7 +207,7 @@
       <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="1">
 
         <androidx.recyclerview.widget.RecyclerView

@@ -21,13 +21,9 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.text.DateFormat
-import java.util.Date
 import ninja.mako.data.NetworkRepository
-import ninja.mako.data.NetworkRecordEntity
 import ninja.mako.discovery.HostCandidatePlanner
 import ninja.mako.discovery.HostDiscoveryPlan
-import ninja.mako.discovery.HostProbeOutcome
 import ninja.mako.discovery.HostSweepSession
 import ninja.mako.discovery.HostSweepStatus
 import ninja.mako.discovery.TcpHostSweepRunner
@@ -74,14 +70,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
       initialValue = 0
-    )
-
-  private val knownNetworkRecords = repository
-    .observeAllRecords()
-    .stateIn(
-      scope = viewModelScope,
-      started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-      initialValue = emptyList()
     )
 
   private val discoveryPlan = networkSnapshots
@@ -167,9 +155,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
   }
 
-  private val detectedDevices = combine(networkSnapshots, sweepSession) { snapshot, session ->
+  private val detectedDevices = combine(networkSnapshots, currentNetworkKey, sweepSession) { snapshot, networkKey, session ->
     withContext(Dispatchers.Default) {
-      buildDetectedDevices(snapshot, session)
+      DetectedDeviceInventoryBuilder.build(snapshot, networkKey, session)
     }
   }
     .conflate()
@@ -199,9 +187,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
   }
     .combine(sortMode) { devices, mode ->
       when (mode) {
-        DeviceSortMode.RECENT -> devices.sortedByDescending { it.sortTimestamp }
-        DeviceSortMode.ADDRESS -> devices.sortedWith(compareBy({ ipv4SortKey(it.hostAddress) }, { it.hostAddress }))
-        DeviceSortMode.IDENTITY -> devices.sortedBy { it.displayTitle.lowercase() }
+        DeviceSortMode.RECENT -> devices.sortedWith(
+          compareByDescending<DiscoveredDeviceListItem> { it.isLocalDevice }
+            .thenByDescending { it.sortTimestamp }
+        )
+        DeviceSortMode.ADDRESS -> devices.sortedWith(
+          compareByDescending<DiscoveredDeviceListItem> { it.isLocalDevice }
+            .thenBy { ipv4SortKey(it.hostAddress) }
+            .thenBy { it.hostAddress }
+        )
+        DeviceSortMode.IDENTITY -> devices.sortedWith(
+          compareByDescending<DiscoveredDeviceListItem> { it.isLocalDevice }
+            .thenBy { it.displayTitle.lowercase() }
+            .thenBy { it.hostAddress }
+        )
       }
     }
     .stateIn(
@@ -233,33 +232,21 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
   val deviceListSummary: StateFlow<String> = combine(detectedDevices, devices, liveTicker) { rawDevices, visibleDevices, now ->
     when {
-      rawDevices.isEmpty() -> "No responsive hosts detected yet."
+      rawDevices.isEmpty() -> "No local Wi-Fi devices in inventory yet."
       visibleDevices.isEmpty() -> "No hosts match the current filters."
       visibleDevices.size == rawDevices.size -> {
-        val liveCount = rawDevices.count { LiveHostWindow.isLive(it.lastSeen, now) }
-        "${visibleDevices.size} detected devices • $liveCount live in the current sweep window"
+        val liveCount = rawDevices.count { device ->
+          device.isLocalDevice || LiveHostWindow.isLive(device.lastSeen, now)
+        }
+        "${rawDevices.size} ${deviceLabel(rawDevices.size)} in local inventory • $liveCount active now"
       }
-      else -> "Showing ${visibleDevices.size} of ${rawDevices.size} detected devices"
+      else -> "Showing ${visibleDevices.size} of ${rawDevices.size} ${deviceLabel(rawDevices.size)}"
     }
   }
     .stateIn(
       scope = viewModelScope,
       started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-      initialValue = "No responsive hosts detected yet."
-    )
-
-  val knownNetworks: StateFlow<List<KnownNetworkListItem>> = combine(
-    knownNetworkRecords,
-    currentNetworkKey
-  ) { records, activeKey ->
-    withContext(Dispatchers.Default) {
-      buildKnownNetworks(records, activeKey)
-    }
-  }
-    .stateIn(
-      scope = viewModelScope,
-      started = SharingStarted.WhileSubscribed(stopTimeoutMillis = 5_000),
-      initialValue = emptyList()
+      initialValue = "No local Wi-Fi devices in inventory yet."
     )
 
   val uiState: StateFlow<MainUiState> = combine(
@@ -315,119 +302,6 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
   }
 
-  private fun buildDetectedDevices(
-    snapshot: NetworkSnapshot,
-    session: HostSweepSession?
-  ): List<DiscoveredDeviceListItem> {
-    if (session == null) {
-      return emptyList()
-    }
-
-    return session.results
-      .asReversed()
-      .filter { result ->
-        result.outcome == HostProbeOutcome.CONNECTED || result.outcome == HostProbeOutcome.REFUSED
-      }
-      .map { result ->
-        val identityHints = buildList {
-          if (result.host == snapshot.gateway) add("Gateway")
-          if (snapshot.dnsServers.contains(result.host)) add("DNS resolver")
-          when (result.port) {
-            53 -> add("DNS service")
-            80 -> add("Web interface")
-            443 -> add("HTTPS endpoint")
-            445 -> add("File sharing")
-            631 -> add("Printer service")
-          }
-        }
-        val badgeLabel = when {
-          result.host == snapshot.gateway -> "Gateway"
-          snapshot.dnsServers.contains(result.host) -> "Resolver"
-          result.port == 631 -> "Printer"
-          result.port == 445 -> "SMB"
-          result.port == 80 || result.port == 443 -> "Web UI"
-          result.port == 53 -> "DNS"
-          result.outcome == HostProbeOutcome.CONNECTED -> "Open service"
-          else -> "Host alive"
-        }
-        val statusLine = when (result.outcome) {
-          HostProbeOutcome.CONNECTED -> "TCP ${result.port ?: "?"} accepted a connection"
-          HostProbeOutcome.REFUSED -> "TCP ${result.port ?: "?"} refused a connection"
-          HostProbeOutcome.TIMEOUT -> "Timed out"
-          HostProbeOutcome.UNREACHABLE -> "Unreachable"
-          HostProbeOutcome.FAILED -> "Probe failed"
-        }
-        val metaParts = buildList {
-          addAll(identityHints.distinct())
-          add("Seen ${formatTimeAgo(result.observedAt)}")
-        }
-
-        DiscoveredDeviceListItem(
-          deviceKey = "${session.networkKey}:${result.host}",
-          displayTitle = result.host,
-          hostAddress = result.host,
-          badgeLabel = badgeLabel,
-          metaLine = metaParts.joinToString(" • "),
-          statusLine = statusLine,
-          searchText = buildList {
-            add(result.host)
-            add(badgeLabel)
-            add(statusLine)
-            addAll(identityHints)
-          }.joinToString("\n"),
-          sortTimestamp = result.observedAt,
-          lastSeen = result.observedAt,
-          isOpenService = result.outcome == HostProbeOutcome.CONNECTED,
-          isInfrastructure = result.host == snapshot.gateway || snapshot.dnsServers.contains(result.host),
-          isWebInterface = result.port == 80 || result.port == 443
-        )
-      }
-      .distinctBy { it.deviceKey }
-  }
-
-  private fun buildKnownNetworks(
-    records: List<NetworkRecordEntity>,
-    activeNetworkKey: String?
-  ): List<KnownNetworkListItem> {
-    return records.map { record ->
-      val isLive = record.networkKey == activeNetworkKey
-      KnownNetworkListItem(
-        networkKey = record.networkKey,
-        title = record.subnet ?: record.gateway ?: "Wi-Fi network",
-        subtitle = buildNetworkSubtitle(record),
-        badgeLabel = if (isLive) "LIVE" else "KNOWN",
-        isSelected = isLive,
-        isLive = isLive
-      )
-    }
-  }
-
-  private fun buildNetworkSubtitle(record: NetworkRecordEntity): String {
-    val lastConnected = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
-      .format(Date(record.lastConnectedAt))
-    val detail = buildList {
-      record.gateway?.let { gateway -> add("Gateway $gateway") }
-      record.domains?.takeIf { it.isNotBlank() }?.let(::add)
-      add("Seen ${record.activationCount} time${if (record.activationCount == 1) "" else "s"}")
-    }.joinToString(" • ")
-
-    return if (detail.isBlank()) {
-      "Last connected $lastConnected"
-    } else {
-      "$detail • Last connected $lastConnected"
-    }
-  }
-
-  private fun formatTimeAgo(timestamp: Long): String {
-    val deltaSeconds = ((System.currentTimeMillis() - timestamp).coerceAtLeast(0L)) / 1_000L
-    return when {
-      deltaSeconds < 5L -> "just now"
-      deltaSeconds < 60L -> "${deltaSeconds}s ago"
-      deltaSeconds < 3_600L -> "${deltaSeconds / 60L}m ago"
-      else -> "${deltaSeconds / 3_600L}h ago"
-    }
-  }
-
   private fun ipv4SortKey(address: String): Long {
     val parts = address.split(".")
     if (parts.size != 4) return Long.MAX_VALUE
@@ -439,6 +313,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
       value = (value shl 8) or octet.toLong()
     }
     return value
+  }
+
+  private fun deviceLabel(count: Int): String {
+    return if (count == 1) "device" else "devices"
   }
 
   private object LiveHostWindow {

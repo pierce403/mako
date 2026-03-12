@@ -12,5 +12,6 @@ data class DiscoveredDeviceListItem(
   val lastSeen: Long,
   val isOpenService: Boolean,
   val isInfrastructure: Boolean,
-  val isWebInterface: Boolean
+  val isWebInterface: Boolean,
+  val isLocalDevice: Boolean
 )

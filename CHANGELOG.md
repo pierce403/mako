@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.6
+
+- reworked the main landing screen so the live local Wi-Fi device inventory stays primary instead of being pushed down by remembered-network chrome
+- tightened the current-network summary card and moved its detail into compact inventory/status copy plus Diagnostics
+- added the current phone to the visible local inventory list so the landing page reflects the device that is actually running `MAKO`
+
 ## 0.1.5
 
 - added a remembered Wi-Fi network strip above the device cards, with the currently selected active network marked `LIVE`

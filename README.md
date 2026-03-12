@@ -41,7 +41,7 @@ Active fingerprinting is currently defined as opt-in per network, with manual pe
 - shark theme: black surfaces with red accents and a hard-edged, tactical presentation
 - typography: condensed uppercase display treatment for headings, calmer body copy underneath
 - tokens: central color tokens live in [colors.xml](/home/pierce/projects/mako/app/src/main/res/values/colors.xml) and website variables live in [index.html](/home/pierce/projects/mako/index.html)
-- network summary: the top of the main screen should immediately answer "what water am I in right now?"
+- landing priority: the main screen should open on the live local Wi-Fi device inventory, with current-network context kept compact above it
 - state treatment: `new network`, `known network`, `live discovery`, `active fingerprinting`, and `offline/unsupported` should each read as distinct UI states
 - trust treatment: `observed`, `inferred`, and `user-labeled` data should remain visually distinct rather than being blended into one confidence-free label
 
@@ -55,7 +55,7 @@ The repo now has the same basic operating shape as `unagi`:
 - APK staging script for `downloads/`
 - landing page at `index.html`
 
-The app shell currently renders current-link context from Android connectivity APIs and is ready for the real network discovery and storage layers.
+The app shell now leads with the live local Wi-Fi inventory list, backed by the current-link context from Android connectivity APIs and the first bounded subnet sweep.
 
 Current architecture direction: stay operationally similar to `unagi`, but use a more modular network/discovery/data pipeline instead of mirroring the Bluetooth-specific internals directly.
 
