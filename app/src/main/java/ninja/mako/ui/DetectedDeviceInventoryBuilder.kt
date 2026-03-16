@@ -115,13 +115,15 @@ object DetectedDeviceInventoryBuilder {
   ): DiscoveredDeviceListItem {
     val classification = enrichment?.classification ?: defaultClassification(snapshot, result)
     val hostname = enrichment?.hostname?.let(::normalizeHostname)
-    val displayTitle = buildDisplayTitle(result.host, hostname, enrichment?.manufacturer, classification)
+    val displayTitle = buildDisplayTitle(result.host, hostname, enrichment?.manufacturer, enrichment?.httpTitle, classification)
     val identityHints = buildList {
       if (result.host == snapshot.gateway) add("Gateway")
       if (snapshot.dnsServers.contains(result.host)) add("DNS resolver")
       hostname?.let { add("PTR $it") }
       enrichment?.manufacturer?.let { add(it) }
       enrichment?.macAddress?.let { add("MAC $it") }
+      enrichment?.httpServer?.takeIf { it.isNotBlank() }?.let { add("Server: $it") }
+      enrichment?.httpTitle?.takeIf { it.isNotBlank() }?.let { add("Web: $it") }
       when (result.port) {
         53 -> add("DNS service")
         80 -> add("Web interface")
@@ -216,9 +218,11 @@ object DetectedDeviceInventoryBuilder {
     host: String,
     hostname: String?,
     manufacturer: String?,
+    httpTitle: String?,
     classification: DeviceClassification
   ): String {
     return when {
+      !httpTitle.isNullOrBlank() -> httpTitle
       !hostname.isNullOrBlank() -> hostname.substringBefore(".")
       !manufacturer.isNullOrBlank() && classification.label != DeviceClassification.unknown().label -> {
         "$manufacturer ${classification.badgeLabel}"
@@ -278,6 +282,8 @@ object DetectedDeviceInventoryBuilder {
       appendLine("Hostname: ${enrichment?.hostname ?: "Unavailable"}")
       appendLine("MAC address: ${enrichment?.macAddress ?: "Unavailable"}")
       appendLine("Manufacturer: ${enrichment?.manufacturer ?: "Unavailable"}")
+      enrichment?.httpServer?.takeIf { it.isNotBlank() }?.let { appendLine("HTTP Server: $it") }
+      enrichment?.httpTitle?.takeIf { it.isNotBlank() }?.let { appendLine("HTTP Title: $it") }
       appendLine("Evidence sources: ${enrichment?.evidenceSources?.takeIf { it.isNotEmpty() }?.joinToString(", ") ?: "Observed sweep only"}")
       appendLine()
       appendLine("Classification evidence")
