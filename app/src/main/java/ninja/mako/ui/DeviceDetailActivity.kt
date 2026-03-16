@@ -12,8 +12,12 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import android.view.View
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import ninja.mako.R
 import ninja.mako.databinding.ActivityDeviceDetailBinding
+import ninja.mako.discovery.ManualPortScanner
 
 class DeviceDetailActivity : AppCompatActivity() {
   private lateinit var binding: ActivityDeviceDetailBinding
@@ -44,6 +48,27 @@ class DeviceDetailActivity : AppCompatActivity() {
       val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
       clipboard.setPrimaryClip(ClipData.newPlainText("MAKO device detail", detail.report))
       Toast.makeText(this, R.string.device_detail_copied, Toast.LENGTH_SHORT).show()
+    }
+
+    binding.scanPortsButton.setOnClickListener {
+      binding.scanPortsButton.isEnabled = false
+      binding.scanPortsResult.visibility = View.VISIBLE
+      binding.scanPortsResult.text = getString(R.string.port_scan_in_progress, ManualPortScanner.EXTENDED_PORTS.size)
+      
+      lifecycleScope.launch {
+        try {
+          val openPorts = ManualPortScanner.scanPorts(detail.hostAddress)
+          if (openPorts.isEmpty()) {
+            binding.scanPortsResult.text = getString(R.string.port_scan_none)
+          } else {
+            binding.scanPortsResult.text = getString(R.string.port_scan_results, openPorts.joinToString(", "))
+          }
+        } catch (e: Exception) {
+          binding.scanPortsResult.text = getString(R.string.port_scan_failed)
+        } finally {
+          binding.scanPortsButton.isEnabled = true
+        }
+      }
     }
 
     WindowCompat.setDecorFitsSystemWindows(window, false)

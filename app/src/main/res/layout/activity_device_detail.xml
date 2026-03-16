@@ -93,12 +93,37 @@
           android:textColor="@color/mako_on_background" />
       </LinearLayout>
 
+      <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:gravity="center_vertical">
+
       <com.google.android.material.button.MaterialButton
         android:id="@+id/copyButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
         android:text="@string/copy_device_detail_report" />
+
+        <com.google.android.material.button.MaterialButton
+          android:id="@+id/scanPortsButton"
+          style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginStart="8dp"
+          android:text="@string/scan_common_ports" />
+          
+      </LinearLayout>
+          
+      <TextView
+          android:id="@+id/scanPortsResult"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="8dp"
+          android:textColor="@color/mako_secondary"
+          android:visibility="gone"
+          android:textStyle="bold" />
 
       <TextView
         android:id="@+id/reportText"
