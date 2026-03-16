@@ -6,6 +6,10 @@ object NeighborTableReader {
   private const val ARP_TABLE_PATH = "/proc/net/arp"
 
   fun macAddressForHost(host: String): String? {
+    return readFromArpTable(host) ?: readFromIpNeigh(host)
+  }
+
+  private fun readFromArpTable(host: String): String? {
     return runCatching {
       File(ARP_TABLE_PATH).useLines { lines ->
         lines
@@ -13,6 +17,24 @@ object NeighborTableReader {
           .mapNotNull(::parseEntry)
           .firstOrNull { entry -> entry.ipAddress == host }
           ?.macAddress
+      }
+    }.getOrNull()
+  }
+
+  private fun readFromIpNeigh(host: String): String? {
+    return runCatching {
+      val process = Runtime.getRuntime().exec(arrayOf("ip", "neigh", "show", host))
+      process.inputStream.bufferedReader().useLines { lines ->
+        lines.mapNotNull { line ->
+          val parts = line.trim().split(Regex("\\s+"))
+          val lladdrIndex = parts.indexOf("lladdr")
+          if (lladdrIndex != -1 && lladdrIndex + 1 < parts.size) {
+            val mac = normalizeMacAddress(parts[lladdrIndex + 1])
+            if (mac != UNKNOWN_MAC) mac else null
+          } else {
+            null
+          }
+        }.firstOrNull()
       }
     }.getOrNull()
   }
