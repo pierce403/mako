@@ -61,7 +61,31 @@ class DeviceDetailActivity : AppCompatActivity() {
           if (openPorts.isEmpty()) {
             binding.scanPortsResult.text = getString(R.string.port_scan_none)
           } else {
-            binding.scanPortsResult.text = getString(R.string.port_scan_results, openPorts.joinToString(", "))
+            val ssb = android.text.SpannableStringBuilder("Open ports:\n")
+            openPorts.forEach { result ->
+              val lineStart = ssb.length
+              
+              if (result.isHttp || result.isHttps) {
+                val proto = if (result.isHttps) "https" else "http"
+                val url = "$proto://${detail.hostAddress}:${result.port}"
+                ssb.append(url)
+                ssb.setSpan(
+                  android.text.style.URLSpan(url),
+                  lineStart,
+                  ssb.length,
+                  android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+              } else {
+                ssb.append("TCP ${result.port}")
+              }
+              
+              if (!result.banner.isNullOrBlank()) {
+                ssb.append(" — ${result.banner}")
+              }
+              ssb.append("\n")
+            }
+            binding.scanPortsResult.text = ssb.trim()
+            binding.scanPortsResult.movementMethod = android.text.method.LinkMovementMethod.getInstance()
           }
         } catch (e: Exception) {
           binding.scanPortsResult.text = getString(R.string.port_scan_failed)

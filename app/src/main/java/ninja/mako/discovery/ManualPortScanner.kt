@@ -20,29 +20,84 @@ object ManualPortScanner {
   
   private const val TIMEOUT_MS = 300
 
-  suspend fun scanPorts(host: String): List<Int> = coroutineScope {
+  suspend fun scanPorts(host: String): List<PortScanResult> = coroutineScope {
     val semaphore = Semaphore(10)
     
     val openPorts = EXTENDED_PORTS.map { port ->
       async(Dispatchers.IO) {
         semaphore.withPermit {
-          tryConnect(host, port)
+          val result = tryConnectAndGrabBanner(host, port)
+          if (result != null) {
+            if (result.banner == null || result.banner.isEmpty()) {
+              val useHttps = port == 443 || port == 8443
+              val bannerRes = HttpBannerGrabber.grab(host, port, useHttps)
+              if (bannerRes != null && (bannerRes.title != null || bannerRes.server != null)) {
+                result.copy(
+                  isHttp = !useHttps,
+                  isHttps = useHttps,
+                  banner = bannerRes.title ?: bannerRes.server
+                )
+              } else {
+                val altUseHttps = !useHttps
+                val altBannerRes = HttpBannerGrabber.grab(host, port, altUseHttps)
+                if (altBannerRes != null && (altBannerRes.title != null || altBannerRes.server != null)) {
+                  result.copy(
+                    isHttp = !altUseHttps,
+                    isHttps = altUseHttps,
+                    banner = altBannerRes.title ?: altBannerRes.server
+                  )
+                } else {
+                  val knownService = when(port) {
+                    53 -> "DNS"
+                    135 -> "RPC"
+                    139 -> "NetBIOS"
+                    445 -> "SMB"
+                    548 -> "AFP"
+                    631 -> "IPP"
+                    3306 -> "MySQL"
+                    3389 -> "RDP"
+                    5353 -> "mDNS"
+                    9100 -> "JetDirect"
+                    else -> null
+                  }
+                  result.copy(banner = knownService)
+                }
+              }
+            } else {
+              result
+            }
+          } else {
+            null
+          }
         }
       }
     }.awaitAll().filterNotNull()
     
-    openPorts.sorted()
+    openPorts.sortedBy { it.port }
   }
 
-  private fun tryConnect(host: String, port: Int): Int? {
+  private fun tryConnectAndGrabBanner(host: String, port: Int): PortScanResult? {
     return try {
+      var rawBanner: String? = null
       Socket().use { socket ->
         socket.connect(InetSocketAddress(host, port), TIMEOUT_MS)
+        socket.soTimeout = 250 // short wait for pre-auth banner
+        
+        try {
+          val buffer = ByteArray(1024)
+          val bytesRead = socket.getInputStream().read(buffer)
+          if (bytesRead > 0) {
+            val decoded = String(buffer, 0, bytesRead, Charsets.UTF_8).trim()
+            if (decoded.isNotBlank()) {
+              rawBanner = decoded.take(120).replace("\r", "").replace("\n", " ")
+            }
+          }
+        } catch (_: Exception) {
+          // Timeout, no spontaneous TCP banner
+        }
       }
-      port
+      PortScanResult(port = port, banner = rawBanner)
     } catch (_: ConnectException) {
-      // Refused is often considered closed, but it means the host is there.
-      // Usually full port scanners list refused as closed.
       null
     } catch (_: SocketTimeoutException) {
       null
@@ -51,3 +106,10 @@ object ManualPortScanner {
     }
   }
 }
+
+data class PortScanResult(
+  val port: Int,
+  val isHttp: Boolean = false,
+  val isHttps: Boolean = false,
+  val banner: String? = null
+)

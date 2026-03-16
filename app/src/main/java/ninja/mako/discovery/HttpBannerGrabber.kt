@@ -23,10 +23,8 @@ object HttpBannerGrabber {
     sc
   }
 
-  suspend fun grab(host: String, port: Int): HttpBanner? = withContext(Dispatchers.IO) {
-    if (port != 80 && port != 443 && port != 8080 && port != 8443) return@withContext null
-
-    val protocol = if (port == 443 || port == 8443) "https" else "http"
+  suspend fun grab(host: String, port: Int, useHttps: Boolean = port == 443 || port == 8443): HttpBanner? = withContext(Dispatchers.IO) {
+    val protocol = if (useHttps) "https" else "http"
     val timeoutMs = 2000
 
     return@withContext runCatching {
