@@ -92,3 +92,10 @@ Build the MVP: identify network -> inventory devices -> fingerprint -> timeline.
 - Record probe defaults and rate limits here once active fingerprinting exists
 - If the app targets SDK 35 or newer, top-level screens need explicit system-bar inset handling to avoid toolbar overlap on Android 15+
 - When shipping user-visible APK changes, bump `versionCode` and `versionName` and keep the installed version visible somewhere obvious such as Diagnostics/about
+
+## Public hosting
+
+The isolated cloudflare/ npm package copies the public landing/download assets.
+Native Git publishes production main; credentials remain in Cloudflare and
+previews are off. npm ci && npm run check:deploy in cloudflare/ validates hosting.
+No app runtime, wallet or device behavior is moved or tested by this port.

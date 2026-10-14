@@ -85,3 +85,11 @@ Protocol and platform notes live in:
 - define the Room schema around per-network history
 - add passive naming and active fingerprinting modules
 - build network detail, device detail, and timeline screens
+
+## Cloudflare public hosting
+
+Native Git publishes main from /cloudflare with npm ci, npm run build
+and npm run deploy. The isolated hosting package copies the existing public landing and its reviewed assets.
+Original application builds, runtime and Pages recovery stay available. Credentials
+remain in Cloudflare; previews are disabled. Verify with cd cloudflare && npm ci
+&& npm run check:deploy. Local services and wallets are not hosted.

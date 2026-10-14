@@ -226,3 +226,7 @@
 - [x] Decide whether the project gets a landing page and versioned APK download flow like `unagi`
 - [x] If a landing page exists, keep app branding, screenshots, and APK links aligned with releases
 - [x] Add a changelog once real implementation work starts landing
+
+## Static hosting migration
+
+- [ ] Move the existing public landing and APK to native Cloudflare Git hosting, verify HTTPS/download bytes and usage metrics.
