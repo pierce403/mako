@@ -229,4 +229,4 @@
 
 ## Static hosting migration
 
-- [ ] Move the existing public landing and APK to native Cloudflare Git hosting, verify HTTPS/download bytes and usage metrics.
+- [x] Move the existing public landing and APK to native Cloudflare Git hosting, verify HTTPS/download bytes and usage metrics.
